@@ -1,0 +1,175 @@
+/* ═══════════════════════════════════════ */
+/* PRAYER JOURNAL */
+/* ═══════════════════════════════════════ */
+
+.pray-hero {
+  background: var(--grad);
+  border-radius: 14px;
+  padding: 22px 18px;
+  text-align: center;
+  margin-bottom: 17px;
+  box-shadow: 0 6px 22px rgba(60, 10, 10, .38);
+  position: relative;
+  overflow: hidden;
+}
+
+.pray-hero::after {
+  content: '🙏';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px;
+  opacity: .14;
+}
+
+.snum {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 48px;
+  color: var(--glt);
+  line-height: 1;
+}
+
+.slbl2 {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(212, 175, 55, .65);
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.ssub {
+  font-size: 14px;
+  color: rgba(253, 246, 227, .55);
+  font-style: italic;
+  margin-top: 5px;
+}
+
+.dotgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.ddot {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  border: 2px solid var(--bdr2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  cursor: default;
+  font-weight: 700;
+  transition: all .2s;
+}
+
+.ddot.done {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1E0A00;
+  box-shadow: 0 2px 7px rgba(180, 130, 0, .35);
+}
+
+.ddot.today {
+  border-color: var(--glt);
+  color: var(--glt);
+}
+
+.pray-form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 15px;
+}
+
+.pray-inp {
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  border-radius: 8px;
+  padding: 11px 13px;
+  font-family: 'EB Garamond', serif;
+  font-size: 17px;
+  color: var(--txt);
+  outline: none;
+  resize: none;
+  line-height: 1.55;
+}
+
+.pray-inp:focus {
+  border-color: var(--gold);
+}
+
+.pcard {
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  border-radius: 11px;
+  padding: 13px 15px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 7px var(--sh2);
+}
+
+.pcard.ans {
+  border-color: rgba(40, 160, 60, .35);
+  background: rgba(40, 160, 60, .04);
+}
+
+.pctop {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 7px;
+}
+
+.pcico {
+  font-size: 21px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pctxt {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--txt);
+  flex: 1;
+}
+
+.pcdate {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.pcacts {
+  display: flex;
+  gap: 7px;
+}
+
+.pcbtn {
+  background: none;
+  border: 1px solid var(--bdr2);
+  border-radius: 13px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  transition: all .2s;
+  text-transform: uppercase;
+}
+
+.pcbtn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.pcbtn.a {
+  border-color: rgba(40, 160, 60, .45);
+  color: rgba(40, 160, 60, .85);
+}

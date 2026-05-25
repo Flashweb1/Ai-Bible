@@ -1,0 +1,226 @@
+/* ═══════════════════════════════════════ */
+/* THEME & VARIABLES */
+/* ═══════════════════════════════════════ */
+
+:root {
+  /* Premium Ivory & Crimson Light Theme */
+  --bg: #FAF9F5;
+  --bg2: #FFFFFF;
+  --surf: rgba(255, 255, 255, 0.85); /* Glassmorphic background */
+  
+  --prime: #800000;      /* Deep Crimson */
+  --prime2: #A30000;     /* Rich Crimson */
+  --prime3: #4A0000;     /* Dark Crimson */
+
+  --gold: #A67C1E;       /* Deep Gold */
+  --glt: #C5A059;        /* Warm Gold Accent */
+  --gpale: #F7EEDB;      /* Pale Gold Hover Tint */
+  --gdim: rgba(197, 160, 89, 0.12);
+
+  --txt: #2B2521;        /* Dark Slate Charcoal */
+  --muted: #7E7265;      /* Taupe Muted */
+
+  --bdr: rgba(166, 124, 30, 0.25);
+  --bdr2: rgba(166, 124, 30, 0.12);
+
+  --sh: rgba(40, 20, 10, 0.08);
+  --sh2: rgba(40, 20, 10, 0.04);
+
+  --hbg: rgba(255, 255, 255, 0.85); /* Frosted header */
+  --grad: linear-gradient(135deg, #4A0000 0%, #800000 100%);
+  --btn-txt: #FFFFFF;
+}
+
+[data-dark] {
+  /* Premium Obsidian & Bronze Dark Theme */
+  --bg: #0C0B0A;
+  --bg2: #161513;
+  --surf: rgba(22, 21, 19, 0.82); /* Glassmorphic background */
+
+  --prime: #C5A059;      /* Warm Gold/Bronze */
+  --prime2: #E2C284;     /* Lighter Bronze Accent */
+  --prime3: #8C6A32;     /* Darker Gold/Bronze */
+
+  --gold: #D4AF37;       /* Bright Metallic Gold */
+  --glt: #F3E0BE;        /* Ivory Gold */
+  --gpale: #262421;      /* Deep Warm Brown Card Hover */
+  --gdim: rgba(212, 175, 55, 0.08);
+
+  --txt: #EAE6DF;        /* Soft White/Warm Gray */
+  --muted: #958B7E;      /* Warm Gray Muted */
+
+  --bdr: rgba(197, 160, 89, 0.22);
+  --bdr2: rgba(197, 160, 89, 0.1);
+
+  --sh: rgba(0, 0, 0, 0.6);
+  --sh2: rgba(0, 0, 0, 0.35);
+
+  --hbg: rgba(22, 21, 19, 0.82); /* Frosted header */
+  --grad: linear-gradient(135deg, #161513 0%, #2A2621 100%);
+  --btn-txt: #0C0B0A;
+}
+
+/* ═══════════════════════════════════════ */
+/* GLOBAL STYLES */
+/* ═══════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  font-family: 'EB Garamond', Georgia, serif;
+  background: var(--bg);
+  color: var(--txt);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background .4s, color .3s;
+}
+
+#app {
+  max-width: 540px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════ */
+/* SCROLLBAR */
+/* ═══════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bdr2);
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════ */
+/* TYPOGRAPHY & UTILITIES */
+/* ═══════════════════════════════════════ */
+
+::placeholder {
+  color: var(--muted);
+  opacity: .6;
+}
+
+select option {
+  background: var(--bg);
+}
+
+.lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 11px;
+  display: block;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.dl {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--bdr), transparent);
+}
+
+.dg {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 3px;
+}
+
+/* ═══════════════════════════════════════ */
+/* ANIMATIONS */
+/* ═══════════════════════════════════════ */
+
+.fade-in {
+  animation: fi .3s ease;
+}
+
+@keyframes fi {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pl {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .35;
+  }
+}
+
+@keyframes bnc {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: .3;
+  }
+  40% {
+    transform: translateY(-7px);
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════ */
+/* CONTENT & LAYOUT */
+/* ═══════════════════════════════════════ */
+
+.cnt {
+  padding: 16px 14px 90px;
+}
+
+/* ═══════════════════════════════════════ */
+/* UTILITIES */
+/* ═══════════════════════════════════════ */
+
+.ldmsg {
+  text-align: center;
+  padding: 44px;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 18px;
+}
+
+.errmsg {
+  text-align: center;
+  padding: 22px;
+  color: #C03030;
+  font-style: italic;
+}
+
+.empty {
+  text-align: center;
+  padding: 44px 14px;
+  color: var(--muted);
+}
+
+.eico {
+  font-size: 48px;
+  margin-bottom: 11px;
+}
+
+.etxt {
+  font-style: italic;
+  font-size: 18px;
+}

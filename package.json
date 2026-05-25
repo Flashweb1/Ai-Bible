@@ -1,0 +1,38 @@
+{
+  "name": "scriptura",
+  "version": "1.0.0",
+  "description": "Scriptura — The Living Word. AI-powered Bible reading app.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --force",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx",
+    "format": "prettier --write src",
+    "backend": "cd backend && npm run dev",
+    "backend:start": "cd backend && npm start",
+    "install:all": "npm install && cd backend && npm install"
+  },
+  "keywords": [
+    "bible",
+    "scripture",
+    "ai",
+    "study",
+    "devotional"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "axios": "^1.6.0",
+    "firebase": "^12.12.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}
