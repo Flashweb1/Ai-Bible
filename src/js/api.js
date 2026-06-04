@@ -126,23 +126,31 @@ export async function getChapter(bookNum, chapter, translation) {
   );
 
   try {
-    const winner = await Promise.any(race);
+    // If Promise.any fails, it throws an AggregateError. 
+    // We catch it to provide a better error message.
+    const winner = await Promise.any(race).catch(() => {
+      throw new Error(`All Bible sources failed for ${book.n} ${chapter}`);
+    });
+
     cache.set(cacheKey, winner);
     setLocal(cacheKey, winner);
     return winner;
   } catch (err) {
-    throw new Error("Could not load chapter. Check your internet connection.");
+    throw err;
   }
 }
 
 export async function askAI(messages, systemPrompt) {
-  const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
+  // Use relative path in dev to leverage Vite proxy, or absolute URL in prod
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '').replace(/\/api$/, '');
+  const endpoint = `${base}/api/ai/ask`;
 
+  console.log(`[API] Fetching AI Response from: ${endpoint}`);
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 30000);
 
   try {
-    const res = await fetch(`${baseUrl}/ai/ask`, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages, systemPrompt }),
@@ -164,11 +172,14 @@ export async function askAI(messages, systemPrompt) {
 }
 
 export async function askAIStream(messages, systemPrompt, onToken) {
-  const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '').replace(/\/api$/, '');
+  const endpoint = `${base}/api/ai/ask/stream`;
+
+  console.log(`[API] Opening AI Stream at: ${endpoint}`);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
 
-  const res = await fetch(`${baseUrl}/ai/ask/stream`, {
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, systemPrompt }),
@@ -200,13 +211,15 @@ export async function askAIStream(messages, systemPrompt, onToken) {
     buffer = lines.pop() || '';
 
     for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
+      const trimmedLine = line.trim();
+      if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+      
       try {
-        const data = JSON.parse(line.slice(6));
+        const data = JSON.parse(trimmedLine.slice(6));
         if (data.done) return;
         if (data.token) onToken(data.token);
       } catch (e) {
-        console.warn("AI Stream chunk error:", e);
+        // Silent catch for partial JSON chunks, will be picked up in next read
       }
     }
   }

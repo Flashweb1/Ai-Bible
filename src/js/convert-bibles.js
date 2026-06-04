@@ -114,7 +114,8 @@ async function convertBibleXMLtoJSON() {
               
               const cleanText = verseText
                 .replace(/<[^>]*>?/gm, '') // Remove any tags
-                .replace(/\d{3,5}/g, '') // Remove Strong's numbers (3-5 digits), even when attached to words
+                // Better: Only remove digits if they are likely Strong's (e.g., following a word without a space)
+                // .replace(/(\w)(\d{3,5})/g, '$1') 
                 .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '') // Remove Margin Notes
                 .trim();
               

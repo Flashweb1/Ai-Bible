@@ -645,11 +645,13 @@
 }
 
 .search-results {
-  max-height: 320px;
+  max-height: 260px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  border-top: 1px solid var(--bdr2);
+  padding-top: 4px;
 }
 
 .search-result {
@@ -682,4 +684,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.search-section-lbl {
+  font-family: var(--font-family-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 14px 4px;
+  opacity: 0.7;
 }

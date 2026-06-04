@@ -100,7 +100,7 @@ export default function App() {
     setIsSearchOpen(false);
     if (item.type === 'book') {
       setSelectedBook(item.payload);
-      setCurrentChapter(1);
+      setCurrentChapter(item.chapter || 1);
       setCurrentTab('read');
     } else if (item.type === 'menu') {
       if (item.payload.id === 'profile') {

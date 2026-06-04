@@ -14,6 +14,18 @@ const geminiKey = process.env.GEMINI_API_KEY?.trim() || '';
 const openrouterKey = process.env.OPENROUTER_API_KEY?.trim() || '';
 
 const providers = [];
+
+if (geminiKey) {
+  providers.push({
+    name: 'Gemini',
+    type: 'gemini',
+    apiKey: geminiKey,
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    defaultHeaders: {},
+    models: ['gemini-2.5-flash'],
+  });
+}
+
 if (openrouterKey) {
   providers.push({
     name: 'OpenRouter',
@@ -32,17 +44,6 @@ if (openrouterKey) {
   });
 }
 
-if (geminiKey) {
-  providers.push({
-    name: 'Gemini',
-    type: 'gemini',
-    apiKey: geminiKey,
-    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    defaultHeaders: {},
-    models: ['gemini-3.5-flash', 'gemini-2.5-flash'],
-  });
-}
-
 if (providers.length === 0) {
   console.error('Missing AI API key. Set GEMINI_API_KEY or OPENROUTER_API_KEY in backend/.env or Vercel env variables.');
 }
@@ -53,18 +54,28 @@ const providerClients = providers.map(provider => ({
     baseURL: provider.baseURL,
     apiKey: provider.apiKey,
     defaultHeaders: provider.defaultHeaders,
+    timeout: 8000, // Timeout after 8 seconds to prevent hanging
   }),
 }));
 
 const activeProviderNames = providerClients.map(p => p.name).join(', ') || 'None';
 console.log(`AI Providers enabled: ${activeProviderNames}`);
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',').map(o => o.trim());
+const defaultOrigins = [
+  'http://localhost:5173', 
+  'http://127.0.0.1:5173', 
+  'http://localhost:5174', 
+  'http://127.0.0.1:5174'
+];
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : defaultOrigins;
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    const isLocal = origin && (origin.includes('localhost') || origin.includes('127.0.0.1'));
+    if (!origin || isLocal || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked: ${origin}`);
@@ -170,6 +181,11 @@ async function getAIResponseStream(messages, systemPrompt, writeToken) {
 app.post('/api/ai/ask', aiLimiter, async (req, res) => {
   const { messages, systemPrompt } = req.body;
 
+  if (!providerClients || providerClients.length === 0) {
+    console.error('AI Request failed: No providers configured');
+    return res.status(503).json({ error: "AI Service unconfigured on server. Check .env keys." });
+  }
+
   // Input validation
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "Messages must be a non-empty array" });
@@ -207,6 +223,11 @@ app.post('/api/ai/ask', aiLimiter, async (req, res) => {
 app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
   const { messages, systemPrompt } = req.body;
 
+  if (!providerClients || providerClients.length === 0) {
+    res.status(503).json({ error: "AI Service unconfigured on server. Check .env keys." });
+    return;
+  }
+
   if (!Array.isArray(messages) || messages.length === 0) {
     res.status(400).json({ error: "Messages must be a non-empty array" });
     return;
@@ -223,8 +244,15 @@ app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
+  let isAborted = false;
+  req.on('close', () => {
+    isAborted = true;
+  });
+
   await getAIResponseStream(messages, sys, (token) => {
-    res.write(`data: ${JSON.stringify({ token })}\n\n`);
+    if (!isAborted) {
+      res.write(`data: ${JSON.stringify({ token })}\n\n`);
+    }
   });
 
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
@@ -236,7 +264,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Scripturai Backend Running on port ${PORT}`);
+  console.log(`Scripturai Backend Running on port ${PORT}.`);
   console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
 });
 

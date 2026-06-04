@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { askAIStream } from '../js/api.js';
+import { askAIStream, getCommentary } from '../js/api.js';
 import { SUGGESTIONS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
 import { renderSafeMarkdown, sanitizeUserInput, validateDevotionalInput } from '../lib/sanitize.js';
@@ -67,6 +67,26 @@ export default function Scholar({ selectedBook, currentChapter }) {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  // Commentary Mode
+  const [useCommentary, setUseCommentary] = useState(false);
+  const [commentaryText, setCommentaryText] = useState('');
+  const [commentaryLoading, setCommentaryLoading] = useState(false);
+
+  // Fetch commentary whenever the toggle or active book/chapter changes
+  useEffect(() => {
+    if (!useCommentary || !selectedBook || !currentChapter) {
+      setCommentaryText('');
+      return;
+    }
+    let cancelled = false;
+    setCommentaryLoading(true);
+    getCommentary('matthew_henry', selectedBook.ab3, currentChapter)
+      .then(text => { if (!cancelled) setCommentaryText(text || ''); })
+      .catch(() => { if (!cancelled) setCommentaryText(''); })
+      .finally(() => { if (!cancelled) setCommentaryLoading(false); });
+    return () => { cancelled = true; };
+  }, [useCommentary, selectedBook, currentChapter]);
+
   // Devotional states
   const [activePlanId, setActivePlanId] = useState(null);
   const [creatingDevotional, setCreatingDevotional] = useState(false);
@@ -115,11 +135,16 @@ export default function Scholar({ selectedBook, currentChapter }) {
       ? ` The user is reading ${selectedBook.n} chapter ${currentChapter}.`
       : '';
 
-    const systemPrompt = `You are "The Scholar", a warm, professional, and wise Bible expert.${context}
+    const commentaryContext = (useCommentary && commentaryText)
+      ? `\n\n--- Historical Commentary (Matthew Henry) ---\n${commentaryText.slice(0, 2000)}\n---`
+      : '';
+
+    const systemPrompt = `You are "The Scholar", a warm, professional, and wise Bible expert.${context}${commentaryContext}
 Answer in clear, structured paragraphs.
 Use **bold** for key terms and Bible references.
 Use > for direct Bible quotes.
 Keep answers focused and conversational—3-4 paragraphs unless asked for depth.
+${useCommentary && commentaryText ? 'Where relevant, reference the historical commentary provided above to enrich your answer.' : ''}
 End with a short question to continue the discussion.`;
 
     const newMessages = [...messages, { role: 'user', content: validation.message }];
@@ -238,7 +263,26 @@ DAY 2: ... (repeat for each day)
       {subView === 'chat' ? (
         <>
           <div className="aitools-container">
-            <span className="lbl">Quick Assistant Actions</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span className="lbl" style={{ margin: 0 }}>Quick Assistant Actions</span>
+              <button
+                className={`commentary-toggle ${useCommentary ? 'on' : ''}`}
+                onClick={() => setUseCommentary(v => !v)}
+                title={useCommentary ? 'Commentary Mode Active' : 'Enable Historical Commentary'}
+              >
+                {commentaryLoading ? '⏳' : '📜'}
+                {useCommentary ? ' Commentary On' : ' Commentary'}
+              </button>
+            </div>
+            {useCommentary && (
+              <div className="commentary-badge">
+                {commentaryLoading
+                  ? `✦ Loading Matthew Henry's Commentary…`
+                  : commentaryText
+                    ? `✦ Commentary active for ${selectedBook?.n} ${currentChapter} — answers enriched with historical context`
+                    : '✦ No commentary found for this passage'}
+              </div>
+            )}
             <div className="aitools">
               <button className="aitool" onClick={() => quickAction('explain')}>📖 Explain</button>
               <button className="aitool" onClick={() => quickAction('crossref')}>🔗 Cross-Refs</button>

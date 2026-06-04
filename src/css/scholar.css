@@ -197,3 +197,55 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 12px var(--sh2);
 }
+
+/* ═══════════════════════════════════════ */
+/* COMMENTARY TOGGLE */
+/* ═══════════════════════════════════════ */
+
+.commentary-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: var(--font-family-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px var(--sh2);
+  white-space: nowrap;
+}
+
+.commentary-toggle:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--sh);
+}
+
+.commentary-toggle.on {
+  background: linear-gradient(135deg, var(--gold), var(--glt));
+  border-color: var(--gold);
+  color: var(--btn-txt);
+  box-shadow: 0 4px 14px rgba(197, 160, 89, 0.3);
+}
+
+.commentary-badge {
+  font-family: var(--font-family-ui);
+  font-size: 11px;
+  color: var(--gold);
+  background: var(--gdim);
+  border: 1px solid var(--bdr2);
+  border-radius: 10px;
+  padding: 7px 12px;
+  margin-bottom: 10px;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  animation: fi 0.3s ease;
+}
