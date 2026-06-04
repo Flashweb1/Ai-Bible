@@ -102,7 +102,7 @@ async function convertBibleXMLtoJSON() {
         const xmlChapters = Array.isArray(rawChapters) ? rawChapters : [rawChapters];
 
         for (const xmlChapter of xmlChapters) {
-          const chapterNum = xmlChapter.num || xmlChapter.n;
+          const chapterNum = getProp(xmlChapter, 'num', 'n', 'c', 'number');
           const verses = [];
 
           const rawVerses = getProp(xmlChapter, 'VERS', 'VERSE', 'v', 'verse');
@@ -118,14 +118,15 @@ async function convertBibleXMLtoJSON() {
                 .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '') // Remove Margin Notes
                 .trim();
               
+              const vNum = getProp(xmlVerse, 'num', 'n', 'v', 'number');
               verses.push({
-                verse: parseInt(xmlVerse.num || xmlVerse.n || xmlVerse.v, 10),
+                verse: vNum ? parseInt(vNum, 10) : null,
                 text: cleanText
               });
             }
           }
 
-          const chapterFileName = `${chapterNum}.json`;
+          const chapterFileName = chapterNum ? `${chapterNum}.json` : 'unknown.json';
           const chapterFilePath = path.join(bookOutputDir, chapterFileName);
           fs.writeFileSync(chapterFilePath, JSON.stringify(verses, null, 2), 'utf8');
         }
