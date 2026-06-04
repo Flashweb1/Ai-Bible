@@ -239,7 +239,7 @@ A: See [BACKEND_INTEGRATION.md - Debugging](./BACKEND_INTEGRATION.md#-debugging)
 ## 📋 File Organization
 
 ```
-Scriptura/
+Scripturai/
 ├── README.md                      # Project overview
 ├── STRUCTURE.md                   # Architecture guide
 ├── PERFORMANCE.md                 # Optimization tips

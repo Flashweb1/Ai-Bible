@@ -154,7 +154,7 @@ export default function App() {
           </svg>
         </button>
         <div className="hdr-mid">
-          <div className="hdr-logo">SCRIPTURA</div>
+          <div className="hdr-logo">SCRIPTURAI</div>
           <div className="hdr-sub">The Living Word</div>
         </div>
         <button className="hico" onClick={() => setIsSearchOpen(true)} title="Search">

@@ -88,7 +88,7 @@ FILES MODIFIED:
 
 ### vs YouVersion (Market Leader)
 ```
-Strengths        | Scriptura ✅ | YouVersion
+Strengths        | Scripturai ✅ | YouVersion
 ─────────────────┼──────────────┼──────────────
 AI Scholar       | YES (NEW)    | No
 No Ads          | YES          | No (has ads)

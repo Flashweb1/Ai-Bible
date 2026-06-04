@@ -11,7 +11,7 @@ const ArrowLeftIcon = () => (
 );
 
 export default function Read({ setTab, selectedBook, setSelectedBook, currentChapter, setCurrentChapter }) {
-  // State mapping from global scriptura.html variables
+  // State mapping from global scripturai.html variables
   const [step, setStep] = useState(selectedBook ? 'verses' : 'book'); // 'book', 'chapter', 'verses'
   const [testament, setTestament] = useState('OT');
   // book and chapter are now props

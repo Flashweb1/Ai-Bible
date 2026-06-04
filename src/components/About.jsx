@@ -69,7 +69,7 @@ export default function About({ user, setTab }) {
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '20px' }}>
-                <p style={{ color: 'var(--muted)', marginBottom: '15px' }}>You are currently using Scriptura in offline/guest mode.</p>
+                <p style={{ color: 'var(--muted)', marginBottom: '15px' }}>You are currently using Scripturai in offline/guest mode.</p>
                 <button className="btn btn-gold" onClick={() => { setTab('home'); }}>Go Home & Sign In</button>
               </div>
             )}
@@ -78,10 +78,10 @@ export default function About({ user, setTab }) {
       case 'donate':
         return (
           <div className="card fade-in" style={{ padding: '20px' }}>
-            <span className="lbl">Support Scriptura</span>
+            <span className="lbl">Support Scripturai</span>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '20px', color: 'var(--prime)', marginBottom: '10px' }}>Keep the Word Ad-Free & Free Forever</h2>
             <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--txt)', marginBottom: '16px' }}>
-              Scriptura is dedicated to keeping scripture and AI-powered commentary accessible to everyone around the world without intrusive ads or paywalls. Your donations help cover hosting and AI API costs.
+              Scripturai is dedicated to keeping scripture and AI-powered commentary accessible to everyone around the world without intrusive ads or paywalls. Your donations help cover hosting and AI API costs.
             </p>
             {donationSuccess ? (
               <div style={{ background: 'var(--gdim)', border: '1px solid var(--gold)', borderRadius: '8px', padding: '15px', color: 'var(--gold)', textAlign: 'center', fontSize: '15px', fontWeight: 'bold' }}>
@@ -139,10 +139,10 @@ export default function About({ user, setTab }) {
       default:
         return (
           <div className="card fade-in" style={{ padding: '20px', lineHeight: '1.6' }}>
-            <span className="lbl">About Scriptura</span>
+            <span className="lbl">About Scripturai</span>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '22px', color: 'var(--prime)', marginBottom: '10px' }}>The Living Word</h2>
             <p style={{ fontSize: '15px', color: 'var(--txt)', marginBottom: '12px' }}>
-              <strong>Scriptura</strong> is a modern, premium web companion designed to deepen your engagement with the Holy Bible. By pairing a distraction-free, elegant reading pane with wise AI-powered insights, Scriptura helps seekers explore context, cross-references, and application.
+              <strong>Scripturai</strong> is a modern, premium web companion designed to deepen your engagement with the Holy Bible. By pairing a distraction-free, elegant reading pane with wise AI-powered insights, Scripturai helps seekers explore context, cross-references, and application.
             </p>
             <p style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '15px' }}>
               Built with love for study, prayer, and memory verse training. Version 1.0.0.
@@ -166,17 +166,11 @@ export default function About({ user, setTab }) {
           </svg>
         </button>
         <div>
-          <div className="hdr-logo">Scriptura Information</div>
-          <div className="hdr-sub">App details, sync status, and feedback</div>
+          <div className="hdr-logo">Scripturai Information</div>
+          <button className={`tbtn ${subView === 'donate' ? 'on' : ''}`} onClick={() => setSubView('donate')}>Donate</button>
+          <button className={`tbtn ${subView === 'privacy' ? 'on' : ''}`} onClick={() => setSubView('privacy')}>Privacy</button>
+          <button className={`tbtn ${subView === 'contact' ? 'on' : ''}`} onClick={() => setSubView('contact')}>Contact</button>
         </div>
-      </div>
-
-      <div className="ttog" style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        <button className={`tbtn ${subView === 'about' ? 'on' : ''}`} onClick={() => setSubView('about')}>About</button>
-        <button className={`tbtn ${subView === 'profile' ? 'on' : ''}`} onClick={() => setSubView('profile')}>Profile</button>
-        <button className={`tbtn ${subView === 'donate' ? 'on' : ''}`} onClick={() => setSubView('donate')}>Donate</button>
-        <button className={`tbtn ${subView === 'privacy' ? 'on' : ''}`} onClick={() => setSubView('privacy')}>Privacy</button>
-        <button className={`tbtn ${subView === 'contact' ? 'on' : ''}`} onClick={() => setSubView('contact')}>Contact</button>
       </div>
 
       {renderContent()}

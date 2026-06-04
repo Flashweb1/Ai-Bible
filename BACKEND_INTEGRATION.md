@@ -1,4 +1,4 @@
-# 🔧 Backend Integration Guide - Scripturai
+t# 🔧 Backend Integration Guide - Scripturai
 
 ## Overview
 This guide explains how to integrate the frontend with the Express backend for secure API calls.
@@ -82,7 +82,7 @@ npm run dev  # Starts on http://localhost:5173
 
 ### 4. Check Backend Logs
 ```
-Scriptura Backend Running on port 3001
+Scripturai Backend Running on port 3001
 AI Engine: Gemini API  [or OpenRouter]
 ```
 
