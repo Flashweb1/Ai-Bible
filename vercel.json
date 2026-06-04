@@ -1,18 +1,29 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install && cd backend && npm install",
-  "framework": "vite",
-  "env": {
-    "VITE_API_URL": {
-      "description": "Backend API base URL (e.g., https://your-backend.vercel.app/api)",
-      "required": false
+  "version": 3,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
     },
-    "ALLOWED_ORIGINS": {
-      "description": "Comma-separated list of allowed CORS origins (e.g., https://your-app.vercel.app)",
-      "required": false
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/server.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -42,16 +53,6 @@
           "value": "geolocation=(), microphone=(), camera=()"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ]
 }

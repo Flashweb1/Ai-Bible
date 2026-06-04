@@ -136,7 +136,7 @@ export async function getChapter(bookNum, chapter, translation) {
 }
 
 export async function askAI(messages, systemPrompt) {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
 
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 30000);
@@ -164,7 +164,7 @@ export async function askAI(messages, systemPrompt) {
 }
 
 export async function askAIStream(messages, systemPrompt, onToken) {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
 

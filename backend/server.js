@@ -12,8 +12,12 @@ const PORT = process.env.PORT || 3001;
 
 const geminiKey = process.env.GEMINI_API_KEY || '';
 const openrouterKey = process.env.OPENROUTER_API_KEY || '';
-const isGemini = geminiKey.startsWith('AIzaSy');
+const isGemini = geminiKey && geminiKey.startsWith('AIzaSy');
 const apiKey = isGemini ? geminiKey : openrouterKey;
+
+if (!apiKey) {
+  console.error('Missing AI API key. Set GEMINI_API_KEY or OPENROUTER_API_KEY in backend/.env or Vercel env variables.');
+}
 
 const aiClient = new OpenAI({
   baseURL: isGemini 
@@ -177,6 +181,17 @@ app.post('/api/ai/ask', aiLimiter, async (req, res) => {
 
 app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
   const { messages, systemPrompt } = req.body;
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    res.status(400).json({ error: "Messages must be a non-empty array" });
+    return;
+  }
+
+  if (!apiKey) {
+    res.status(500).json({ error: 'AI API key is not configured.' });
+    return;
+  }
+
   const sys = systemPrompt || "You are 'The Scholar', a warm Bible scholar.";
 
   res.setHeader('Content-Type', 'text/event-stream');
@@ -199,3 +214,5 @@ app.listen(PORT, () => {
   console.log(`Scriptura Backend Running on port ${PORT}`);
   console.log(`AI Engine: ${isGemini ? 'Gemini API' : 'OpenRouter'}`);
 });
+
+export default app;
