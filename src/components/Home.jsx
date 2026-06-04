@@ -2,7 +2,9 @@ import React from 'react';
 import { DAILY, QUICK_BOOKS, MEMORY_VERSES } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
 
-export default function Home({ setTab, user, onLogout, onLoginClick }) {
+import { BOOKS } from '../js/data.js';
+
+export default function Home({ setTab, user, onLogout, onLoginClick, setSelectedBook, setCurrentChapter }) {
   const verse = DAILY[new Date().getDay() % DAILY.length];
   const { notes, prayers, streak } = useAppContext();
   const prayersLength = prayers ? prayers.length : 0;
@@ -35,8 +37,8 @@ export default function Home({ setTab, user, onLogout, onLoginClick }) {
         <div className="hero-txt">"{verse.text}"</div>
         <div className="hero-ref">— {verse.ref}</div>
         <div className="hero-acts">
-          <button className="hbtn" onClick={() => setTab('scholar')}>Explain</button>
-          <button className="hbtn" onClick={() => setTab('scholar')}>Pray It</button>
+          <button className="hbtn" onClick={() => { localStorage.setItem('sc-scholar-query', `Explain the significance of ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Explain</button>
+          <button className="hbtn" onClick={() => { localStorage.setItem('sc-scholar-query', `Write a heartfelt prayer based on ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Pray It</button>
         </div>
       </div>
 
@@ -55,12 +57,19 @@ export default function Home({ setTab, user, onLogout, onLoginClick }) {
 
       <span className="lbl">Quick Access</span>
       <div className="qgrid">
-        {QUICK_BOOKS.map((b) => (
-          <div key={b} className="qitem" onClick={() => setTab('read')}>
-            <div className="qitem-ico">📖</div>
-            <div className="qitem-lbl">{b}</div>
-          </div>
-        ))}
+        {QUICK_BOOKS.map((b) => {
+          const bookObj = BOOKS.find(x => x.n === b) || BOOKS.find(x => x.ab.toLowerCase() === b.toLowerCase());
+          return (
+            <div key={b} className="qitem" onClick={() => {
+              if (bookObj && setSelectedBook) setSelectedBook(bookObj);
+              if (setCurrentChapter) setCurrentChapter(1);
+              setTab('read');
+            }}>
+              <div className="qitem-ico">📖</div>
+              <div className="qitem-lbl">{b}</div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="divider">

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../AppContext.jsx';
+import { BOOKS } from '../js/data.js';
 
 export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }) {
   const { bookmarks, deleteBookmark } = useAppContext();
@@ -27,9 +28,14 @@ export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }
   };
 
   const handleJumpToRead = (b) => {
-    // Books mapping might be needed to set selectedBook object. 
-    // We can find the book from the data or construct a minimal book object:
-    setSelectedBook({ num: 0, n: b.bn, ab: b.bk, ch: 0 }); // minimal definition
+    // Find the correct book object from the static BOOKS database to prevent a 'Book not found' error
+    const bookObj = BOOKS.find(x => x.ab === b.bk || x.n === b.bn);
+    if (bookObj) {
+      setSelectedBook(bookObj);
+    } else {
+      // Fallback fallback if not found
+      setSelectedBook({ num: 1, n: b.bn, ab: b.bk, ch: 1 });
+    }
     setCurrentChapter(b.ch);
     setTab('read');
   };

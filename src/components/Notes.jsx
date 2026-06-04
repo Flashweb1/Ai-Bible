@@ -14,7 +14,12 @@ export default function Notes() {
         if (prefill) {
             try {
                 const data = JSON.parse(prefill);
-                setEditingNote({});
+                setEditingNote({
+                    title: data.title || '',
+                    passage: data.passage || '',
+                    content: data.content || '',
+                    tags: ['Study']
+                });
                 setTitle(data.title || '');
                 setPassage(data.passage || '');
                 setContent(data.content || '');
@@ -29,6 +34,11 @@ export default function Notes() {
     const tags = ['Study', 'Prayer', 'Personal', 'Sermon', 'Reflections'];
 
     const handleSave = () => {
+        if (!content.trim() && !title.trim()) {
+            alert("Note cannot be empty.");
+            return;
+        }
+
         const noteData = {
             title: title || 'Untitled Note',
             passage,
@@ -43,7 +53,7 @@ export default function Notes() {
         } else {
             // Create new note
             const newNoteObj = {
-                id: 'nt-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                id: `nt-${crypto.randomUUID()}`,
                 ...noteData,
                 createdAt: new Date().toISOString()
             };

@@ -6,6 +6,18 @@ export default defineConfig({
   build: {
     outDir: './dist',
     emptyOutDir: true,
+    minify: 'terser',
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'react-vendor';
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   server: {
     port: 5173,

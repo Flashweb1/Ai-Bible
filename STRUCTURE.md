@@ -4,44 +4,57 @@
 
 ```
 Bible AI/
-├── public/
-│   └── index.html                 # Main HTML entry point
-├── src/
-│   ├── css/
-│   │   ├── main.css              # Global styles & theme
-│   │   ├── components.css        # Reusable component styles
-│   │   ├── home.css              # Home page styles
-│   │   ├── read.css              # Bible reader styles
-│   │   ├── scholar.css           # AI chat styles
-│   │   ├── prayer.css            # Prayer journal styles
-│   │   ├── quiz.css              # Quiz & flashcards styles
-│   │   └── notes.css             # Notes page styles
-│   └── js/
-│       ├── main.js               # Entry point & UI rendering
-│       ├── data.js               # Constants & configuration
-│       ├── state.js              # Application state
-│       ├── api.js                # API calls (ready for backend)
-│       ├── services/
-│       │   ├── bibleService.js   # Bible reading functionality
-│       │   ├── versesService.js  # Verse sheet & highlighting
-│       │   ├── audioService.js   # Text-to-speech
-│       │   ├── aiService.js      # AI Scholar chat
-│       │   ├── prayerService.js  # Prayer journal
-│       │   ├── quizService.js    # Memory verse quiz
-│       │   └── notesService.js   # Notes & journaling
-│       └── utils/
-│           ├── storage.js        # LocalStorage management
-│           └── formatting.js     # Text & date formatting
 ├── backend/
-│   ├── server.js                 # Express API (template)
-│   └── package.json
-├── package.json                  # Frontend dependencies
+│   ├── package.json
+│   └── server.js                 # Express API proxy for AI requests
+├── public/
+│   ├── index.html                # Main HTML entry point
+│   ├── sw.js                     # Service worker cache shell
+│   └── bibles/                   # Local Bible JSON translations
+├── src/
+│   ├── App.jsx                   # Root React app
+│   ├── AppContext.jsx            # Global app state and sync logic
+│   ├── main.jsx                  # React DOM bootstrap
+│   ├── components/
+│   │   ├── About.jsx
+│   │   ├── AuthModal.jsx
+│   │   ├── Bookmarks.jsx
+│   │   ├── Drawer.jsx
+│   │   ├── ErrorBoundary.jsx
+│   │   ├── Home.jsx
+│   │   ├── Notes.jsx
+│   │   ├── Pray.jsx
+│   │   ├── Quiz.jsx
+│   │   ├── Read.jsx
+│   │   ├── Scholar.jsx
+│   │   ├── Search.jsx
+│   │   ├── Settings.jsx
+│   │   └── VerseSheetModal.jsx
+│   ├── css/
+│   │   ├── components.css
+│   │   ├── home.css
+│   │   ├── main.css
+│   │   ├── notes.css
+│   │   ├── prayer.css
+│   │   ├── quiz.css
+│   │   ├── read.css
+│   │   └── scholar.css
+│   ├── js/
+│   │   ├── api.js
+│   │   ├── convert-bibles.js
+│   │   ├── data.js
+│   │   ├── navService.js
+│   │   ├── preferences.js
+│   │   └── storage.js
+│   └── lib/
+│       ├── firebase.js
+│       └── sanitize.js
+├── package.json                  # Frontend dependencies and scripts
+├── package-lock.json
 ├── vite.config.js               # Build configuration
-├── .env.example                 # Environment variables template
-├── .gitignore                   # Git ignore rules
 ├── README.md                    # Project overview
-└── STRUCTURE.md                 # This file
-
+├── STRUCTURE.md                 # This file
+└── SECURITY.md                  # Security practices
 ```
 
 ## Key Files Explained
@@ -61,6 +74,7 @@ Each service module handles a specific feature:
 bibleService    → Load books, chapters, change translations, navigate
 versesService   → Open verse detail, highlight, bookmark, share
 audioService    → Text-to-speech playback control
+navService      → Handle Hamburger menu toggle and drawer state
 aiService       → Send messages to Claude, manage chat history
 prayerService   → Add/delete prayers, track streak
 quizService     → Flashcard quiz logic

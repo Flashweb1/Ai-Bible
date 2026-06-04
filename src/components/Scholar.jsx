@@ -2,14 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { askAIStream } from '../js/api.js';
 import { SUGGESTIONS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
+import { renderSafeMarkdown, sanitizeUserInput, validateDevotionalInput } from '../lib/sanitize.js';
 
-function renderMsg(text) {
-  return text
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-}
+// Removed: renderMsg function - now using renderSafeMarkdown from sanitize.js
 
 // Custom Regex parser for structure: DAY X: title, VERSE: x, REFLECTION: x, PRAYER: x
 function parseDevotional(text) {
@@ -98,11 +93,23 @@ export default function Scholar({ selectedBook, currentChapter }) {
       setSubView('chat');
       handleSend(pendingQuery);
     }
+    const pendingTab = localStorage.getItem('sc-scholar-tab');
+    if (pendingTab) {
+      localStorage.removeItem('sc-scholar-tab');
+      setSubView(pendingTab);
+    }
   }, []);
 
   const handleSend = async (text) => {
     const msg = text || input;
-    if (!msg.trim() || loading) return;
+    const validation = sanitizeUserInput(msg);
+    
+    if (!validation.valid) {
+      alert(validation.error || 'Invalid input');
+      return;
+    }
+    
+    if (loading) return;
 
     const context = selectedBook
       ? ` The user is reading ${selectedBook.n} chapter ${currentChapter}.`
@@ -115,7 +122,7 @@ Use > for direct Bible quotes.
 Keep answers focused and conversational—3-4 paragraphs unless asked for depth.
 End with a short question to continue the discussion.`;
 
-    const newMessages = [...messages, { role: 'user', content: msg }];
+    const newMessages = [...messages, { role: 'user', content: validation.message }];
     const aiIndex = newMessages.length;
     setMessages([...newMessages, { role: 'assistant', content: '' }]);
     setInput('');
@@ -148,17 +155,25 @@ End with a short question to continue the discussion.`;
 
   const generateDevotionalPlan = async () => {
     const topic = devotionalTopic.trim() || 'Faith & Guidance';
+    
+    // Validate all devotional inputs
+    const validation = validateDevotionalInput(topic, devotionalDays, devotionalStyle);
+    if (!validation.valid) {
+      alert('Invalid input: ' + validation.errors.join(', '));
+      return;
+    }
+    
     setCreatingDevotional(true);
     setStreamedDevotionalText('');
     setLoading(true);
 
     const promptMsg = [{
       role: 'user',
-      content: `Create a plan on: "${topic}"`
+      content: `Create a plan on: "${validation.sanitizedTopic}"`
     }];
 
     const systemPrompt = `You are an expert biblical counselor.
-Generate a ${devotionalDays}-day devotional plan on the topic of "${topic}" in a ${devotionalStyle} style.
+Generate a ${devotionalDays}-day devotional plan on the topic of "${validation.sanitizedTopic}" in a ${validation.sanitizedStyle} style.
 Format your response EXACTLY as follows for each day. Do not add markdown bold formatting to field keywords:
 
 DAY 1: [Day Title]
@@ -181,7 +196,7 @@ DAY 2: ... (repeat for each day)
       if (parsedDays.length > 0) {
         const newPlan = {
           id: 'dev-' + Date.now(),
-          topic: topic,
+          topic: validation.sanitizedTopic,
           duration: devotionalDays,
           currentDay: 1,
           days: parsedDays,
@@ -249,7 +264,7 @@ DAY 2: ... (repeat for each day)
             {messages.map((m, i) => (
               <div key={i} className={`bub ${m.role === 'user' ? 'bu' : 'bai'}`}>
                 {m.role === 'assistant' && <div className="blbl">✦ The Scholar</div>}
-                <div className="msg-content" dangerouslySetInnerHTML={{__html: renderMsg(m.content)}} />
+                <div className="msg-content" dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(m.content) }} />
                 {m.role === 'assistant' && !loading && m.content && i === messages.length - 1 && (
                   <div className="suggrid" style={{marginTop: '10px'}}>
                     {FOLLOWUPS.map((s, si) => (
@@ -351,7 +366,7 @@ DAY 2: ... (repeat for each day)
                     <span className="lbl" style={{ marginBottom: '5px' }}>Reflection</span>
                     <div 
                       style={{ fontSize: '15px', lineHeight: '1.6', color: 'var(--txt)', marginBottom: '18px' }}
-                      dangerouslySetInnerHTML={{ __html: renderMsg(activePlan.days[activePlan.currentDay - 1].reflection) }}
+                      dangerouslySetInnerHTML={{ __html: renderSafeMarkdown(activePlan.days[activePlan.currentDay - 1].reflection) }}
                     />
 
                     <span className="lbl" style={{ marginBottom: '5px' }}>Closing Prayer</span>

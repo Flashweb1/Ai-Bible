@@ -41,7 +41,8 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('getbible.net') || 
     url.hostname.includes('bible-api.com') ||
     url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('firebase')
+    url.hostname.includes('firebase') ||
+    url.pathname.startsWith('/api') // Exclude all /api calls from caching
   ) {
     return; 
   }
@@ -50,7 +51,11 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Fetch from network in background to update cache for next time (Stale-While-Revalidate)
+        // For local Bible files, serve from cache immediately and don't revalidate
+        if (url.pathname.startsWith('/bibles/')) {
+          return cachedResponse;
+        }
+        // For other assets, fetch from network in background to update cache for next time (Stale-While-Revalidate)
         fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
@@ -67,7 +72,7 @@ self.addEventListener('fetch', (event) => {
         
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          if (event.request.url.startsWith('http')) {
+          if (event.request.url.startsWith('http') || url.pathname.startsWith('/bibles/')) { // Cache local Bible files
             cache.put(event.request, responseToCache);
           }
         });

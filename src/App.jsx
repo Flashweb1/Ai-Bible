@@ -1,27 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import Home from './components/Home';
-import Read from './components/Read';
-import Scholar from './components/Scholar';
-import Pray from './components/Pray';
-import Quiz from './components/Quiz';
-import Notes from './components/Notes';
-import Bookmarks from './components/Bookmarks';
-import AuthModal from './components/AuthModal';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+const Home = lazy(() => import('./components/Home'));
+const Read = lazy(() => import('./components/Read'));
+const Scholar = lazy(() => import('./components/Scholar'));
+const Pray = lazy(() => import('./components/Pray'));
+const Quiz = lazy(() => import('./components/Quiz'));
+const Notes = lazy(() => import('./components/Notes'));
+const Bookmarks = lazy(() => import('./components/Bookmarks'));
+const Settings = lazy(() => import('./components/Settings'));
+const Drawer = lazy(() => import('./components/Drawer'));
+const AuthModal = lazy(() => import('./components/AuthModal'));
+const About = lazy(() => import('./components/About'));
+const Search = lazy(() => import('./components/Search'));
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { loadPreferences, savePreferences, applyPreferences } from './js/preferences.js';
+
+const DEFAULT_PREFERENCES = {
+  theme: 'light',
+  fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+  fontScale: 1,
+  accent: 'hsl(348 70% 45%)',
+  accentCompl: 'hsl(168 70% 45%)',
+};
+
+function getSavedBook() {
+  try {
+    const raw = localStorage.getItem('sc-selected-book');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getSavedChapter() {
+  const raw = localStorage.getItem('sc-current-chapter');
+  const value = parseInt(raw, 10);
+  return Number.isInteger(value) && value > 0 ? value : 1;
+}
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('home');
-  const [isDark, setIsDark] = useState(localStorage.getItem('sc-dark') === '1');
+  const [isDark, setIsDark] = useState(() => {
+    const prefs = loadPreferences();
+    if (prefs && prefs.theme) {
+      return prefs.theme === 'dark';
+    }
+    return localStorage.getItem('sc-dark') === '1';
+  });
   const [user, setUser] = useState(null);
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [currentChapter, setCurrentChapter] = useState(1);
+  const [selectedBook, setSelectedBook] = useState(() => getSavedBook());
+  const [currentChapter, setCurrentChapter] = useState(() => getSavedChapter());
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Load and apply all user preferences on initial mount
   useEffect(() => {
-    document.documentElement.toggleAttribute('data-dark', isDark);
+    const prefs = loadPreferences() || DEFAULT_PREFERENCES;
+    applyPreferences(prefs);
+  }, []);
+
+  // Update theme setting in preferences and apply when isDark toggled
+  useEffect(() => {
+    const currentPrefs = loadPreferences() || DEFAULT_PREFERENCES;
+    const nextPrefs = { ...currentPrefs, theme: isDark ? 'dark' : 'light' };
+    savePreferences(nextPrefs);
+    applyPreferences(nextPrefs);
     localStorage.setItem('sc-dark', isDark ? '1' : '0');
   }, [isDark]);
+
+  useEffect(() => {
+    if (selectedBook) {
+      localStorage.setItem('sc-selected-book', JSON.stringify(selectedBook));
+    } else {
+      localStorage.removeItem('sc-selected-book');
+    }
+  }, [selectedBook]);
+
+  useEffect(() => {
+    localStorage.setItem('sc-current-chapter', String(currentChapter));
+  }, [currentChapter]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -38,15 +96,51 @@ export default function App() {
     }
   };
 
+  const handleSearchSelect = (item) => {
+    setIsSearchOpen(false);
+    if (item.type === 'book') {
+      setSelectedBook(item.payload);
+      setCurrentChapter(1);
+      setCurrentTab('read');
+    } else if (item.type === 'menu') {
+      if (item.payload.id === 'profile') {
+        if (!user) { setShowAuthModal(true); return; }
+        localStorage.setItem('sc-about-tab', 'profile');
+        setCurrentTab('about');
+      } else if (item.payload.id === 'settings') {
+        setCurrentTab('settings');
+      } else if (item.payload.id === 'bookmarks') {
+        setCurrentTab('bookmarks');
+      } else if (item.payload.id === 'prayer') {
+        setCurrentTab('pray');
+      } else if (item.payload.id === 'day_by_day' || item.payload.id === 'reading_plans') {
+        localStorage.setItem('sc-scholar-tab', 'devotionals');
+        setCurrentTab('scholar');
+      } else if (['donate', 'about', 'privacy', 'contact'].includes(item.payload.id)) {
+        localStorage.setItem('sc-about-tab', item.payload.id);
+        setCurrentTab('about');
+      } else if (item.payload.id === 'audio_bible') {
+        setCurrentTab('read');
+      } else {
+        setCurrentTab(item.payload.id);
+      }
+    } else if (item.type === 'daily') {
+      localStorage.setItem('sc-scholar-query', `Explain the significance of ${item.payload.ref}: "${item.payload.text}"`);
+      setCurrentTab('scholar');
+    }
+  };
+
   const renderTab = () => {
     switch (currentTab) {
-      case 'home': return <Home setTab={setCurrentTab} user={user} onLogout={handleLogout} onLoginClick={() => setShowAuthModal(true)} />;
+      case 'home': return <Home setTab={setCurrentTab} user={user} onLogout={handleLogout} onLoginClick={() => setShowAuthModal(true)} setSelectedBook={setSelectedBook} setCurrentChapter={setCurrentChapter} />;
       case 'read': return <Read selectedBook={selectedBook} setSelectedBook={setSelectedBook} currentChapter={currentChapter} setCurrentChapter={setCurrentChapter} setTab={setCurrentTab} />;
       case 'scholar': return <Scholar selectedBook={selectedBook} currentChapter={currentChapter} />;
       case 'pray': return <Pray />;
       case 'quiz': return <Quiz />;
       case 'notes': return <Notes />;
       case 'bookmarks': return <Bookmarks setTab={setCurrentTab} setSelectedBook={setSelectedBook} setCurrentChapter={setCurrentChapter} />;
+      case 'settings': return <Settings isDark={isDark} setIsDark={setIsDark} setTab={setCurrentTab} />;
+      case 'about': return <About user={user} setTab={setCurrentTab} />;
       default: return <Home setTab={setCurrentTab} user={user} onLogout={handleLogout} onLoginClick={() => setShowAuthModal(true)} />;
     }
   };
@@ -54,37 +148,41 @@ export default function App() {
   return (
     <div id="app">
       <header className="hdr">
-        <button className="hico" onClick={() => setIsDark(!isDark)} id="thmbtn" title="Toggle Theme">
+        <button className="hico" onClick={() => setIsDrawerOpen(true)} title="Open Menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            {isDark 
-              ? <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
-              : <><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>
-            }
+            <path d="M3 6h18M3 12h18M3 18h18" />
           </svg>
         </button>
         <div className="hdr-mid">
           <div className="hdr-logo">SCRIPTURA</div>
           <div className="hdr-sub">The Living Word</div>
         </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button className="hico" onClick={() => setCurrentTab('bookmarks')} title="Bookmarks">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-          <button className="hico" onClick={() => setCurrentTab('notes')} title="Notes">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          </button>
-        </div>
+        <button className="hico" onClick={() => setIsSearchOpen(true)} title="Search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
       </header>
 
+      <Suspense>
+        <Drawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          setTab={setCurrentTab}
+          setSelectedBook={setSelectedBook}
+          setCurrentChapter={setCurrentChapter}
+          openAuth={() => setShowAuthModal(true)}
+          user={user}
+          isDark={isDark}
+          toggleTheme={() => setIsDark(!isDark)}
+        />
+      </Suspense>
+
       <main className="cnt fade-in" id="cnt">
-        {renderTab()}
+        <Suspense fallback={<div className="ldmsg">Loading...</div>}>
+          {renderTab()}
+        </Suspense>
       </main>
 
       <nav className="bnav">
@@ -92,8 +190,7 @@ export default function App() {
           { id: 'home', label: 'Home', path: <><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9" /></> },
           { id: 'read', label: 'Read', path: <><path d="M12 6.5C10 4 6 4 4 6v13c2-2 6-2 8 0M12 6.5C14 4 18 4 20 6v13c-2-2-6-2-8 0" /></> },
           { id: 'scholar', label: 'Scholar', path: <><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" /></> },
-          { id: 'pray', label: 'Pray', path: <><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" /></> },
-          { id: 'quiz', label: 'Quiz', path: <><path d="M12 22a10 10 0 100-20 10 10 0 000 20zM9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" /></> }
+          { id: 'notes', label: 'Notes', path: <><path d="M21 15V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h10l4 4V15z" /></> }
         ].map((navItem) => (
           <button
             key={navItem.id}
@@ -106,7 +203,17 @@ export default function App() {
         ))}
       </nav>
 
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showAuthModal && (
+        <Suspense fallback={<div className="mbg open"><div className="modal">Loading...</div></div>}>
+          <AuthModal onClose={() => setShowAuthModal(false)} />
+        </Suspense>
+      )}
+
+      {isSearchOpen && (
+        <Suspense fallback={<div className="ov"><div className="ldmsg">Loading search...</div></div>}>
+          <Search onSelect={handleSearchSelect} onClose={() => setIsSearchOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
