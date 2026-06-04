@@ -10,25 +10,54 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const geminiKey = process.env.GEMINI_API_KEY || '';
-const openrouterKey = process.env.OPENROUTER_API_KEY || '';
-const isGemini = geminiKey && geminiKey.startsWith('AIzaSy');
-const apiKey = isGemini ? geminiKey : openrouterKey;
+const geminiKey = process.env.GEMINI_API_KEY?.trim() || '';
+const openrouterKey = process.env.OPENROUTER_API_KEY?.trim() || '';
 
-if (!apiKey) {
+const providers = [];
+if (openrouterKey) {
+  providers.push({
+    name: 'OpenRouter',
+    type: 'openrouter',
+    apiKey: openrouterKey,
+    baseURL: 'https://openrouter.ai/api/v1',
+    defaultHeaders: {
+      'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
+      'X-Title': 'Scriptura',
+    },
+    models: [
+      'deepseek/deepseek-chat',
+      'deepseek/deepseek-v4-flash:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+    ],
+  });
+}
+
+if (geminiKey) {
+  providers.push({
+    name: 'Gemini',
+    type: 'gemini',
+    apiKey: geminiKey,
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    defaultHeaders: {},
+    models: ['gemini-3.5-flash', 'gemini-2.5-flash'],
+  });
+}
+
+if (providers.length === 0) {
   console.error('Missing AI API key. Set GEMINI_API_KEY or OPENROUTER_API_KEY in backend/.env or Vercel env variables.');
 }
 
-const aiClient = new OpenAI({
-  baseURL: isGemini 
-    ? 'https://generativelanguage.googleapis.com/v1beta/openai/' 
-    : 'https://openrouter.ai/api/v1',
-  apiKey: apiKey,
-  defaultHeaders: isGemini ? {} : {
-    'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
-    'X-Title': 'Scriptura',
-  },
-});
+const providerClients = providers.map(provider => ({
+  ...provider,
+  client: new OpenAI({
+    baseURL: provider.baseURL,
+    apiKey: provider.apiKey,
+    defaultHeaders: provider.defaultHeaders,
+  }),
+}));
+
+const activeProviderNames = providerClients.map(p => p.name).join(', ') || 'None';
+console.log(`AI Providers enabled: ${activeProviderNames}`);
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',').map(o => o.trim());
 
@@ -57,16 +86,8 @@ const aiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-const MODELS = isGemini 
-  ? ['gemini-3.5-flash', 'gemini-2.5-flash'] 
-  : [
-      'deepseek/deepseek-chat',
-      'deepseek/deepseek-v4-flash:free',
-      'meta-llama/llama-3.3-70b-instruct:free',
-    ];
-
-async function tryModel(model, messages, systemPrompt) {
-  const completion = await aiClient.chat.completions.create({
+async function tryModel(client, model, messages, systemPrompt) {
+  const completion = await client.chat.completions.create({
     model,
     messages: [
       { role: 'system', content: systemPrompt },
@@ -78,26 +99,28 @@ async function tryModel(model, messages, systemPrompt) {
 }
 
 async function getAIResponse(messages, systemPrompt) {
-  for (const model of MODELS) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        return await tryModel(model, messages, systemPrompt);
-      } catch (err) {
-        const isRateLimit = err.status === 429 || (err.message || '').includes('429');
-        if (isRateLimit && attempt < 2) {
-          await new Promise(r => setTimeout(r, 2000));
-          continue;
+  for (const provider of providerClients) {
+    for (const model of provider.models) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          return await tryModel(provider.client, model, messages, systemPrompt);
+        } catch (err) {
+          const isRateLimit = err.status === 429 || (err.message || '').includes('429');
+          if (isRateLimit && attempt < 2) {
+            await new Promise(r => setTimeout(r, 2000));
+            continue;
+          }
+          console.warn(`${provider.name} model ${model} failed:`, err.message);
+          break;
         }
-        console.warn(`Model ${model} failed:`, err.message);
-        break;
       }
     }
   }
-  throw new Error('AI service unavailable. Adding $5 at openrouter.ai/settings/credits restores access.');
+  throw new Error('AI service unavailable. Ensure OpenRouter or Gemini keys are configured and the provider is healthy.');
 }
 
-async function* tryModelStream(model, messages, systemPrompt) {
-  const stream = await aiClient.chat.completions.create({
+async function* tryModelStream(client, model, messages, systemPrompt) {
+  const stream = await client.chat.completions.create({
     model,
     messages: [
       { role: 'system', content: systemPrompt },
@@ -113,33 +136,35 @@ async function* tryModelStream(model, messages, systemPrompt) {
 }
 
 async function getAIResponseStream(messages, systemPrompt, writeToken) {
-  for (const model of MODELS) {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        for await (const token of tryModelStream(model, messages, systemPrompt)) {
-          writeToken(token);
+  for (const provider of providerClients) {
+    for (const model of provider.models) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          for await (const token of tryModelStream(provider.client, model, messages, systemPrompt)) {
+            writeToken(token);
+          }
+          return;
+        } catch (err) {
+          const isRateLimit = err.status === 429 || (err.message || '').includes('429');
+          if (isRateLimit && attempt < 2) {
+            await new Promise(r => setTimeout(r, 2000));
+            continue;
+          }
+          console.warn(`${provider.name} model ${model} stream failed:`, err.message);
+          break;
         }
+      }
+      // Fallback: try non-streaming for this model
+      try {
+        const text = await tryModel(provider.client, model, messages, systemPrompt);
+        writeToken(text);
         return;
       } catch (err) {
-        const isRateLimit = err.status === 429 || (err.message || '').includes('429');
-        if (isRateLimit && attempt < 2) {
-          await new Promise(r => setTimeout(r, 2000));
-          continue;
-        }
-        console.warn(`Model ${model} stream failed:`, err.message);
-        break;
+        console.warn(`${provider.name} model ${model} non-stream fallback also failed:`, err.message);
       }
     }
-    // Fallback: try non-streaming for this model
-    try {
-      const text = await tryModel(model, messages, systemPrompt);
-      writeToken(text);
-      return;
-    } catch (err) {
-      console.warn(`Model ${model} non-stream fallback also failed:`, err.message);
-    }
   }
-  writeToken('The AI service is temporarily unavailable. Adding a small credit balance ($5) at openrouter.ai/settings/credits will restore access immediately.');
+  writeToken('The AI service is temporarily unavailable. Ensure OpenRouter or Gemini keys are configured and the provider is healthy.');
 }
 
 app.post('/api/ai/ask', aiLimiter, async (req, res) => {
@@ -187,7 +212,7 @@ app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
     return;
   }
 
-  if (!apiKey) {
+  if (!providerClients.length) {
     res.status(500).json({ error: 'AI API key is not configured.' });
     return;
   }
@@ -207,12 +232,12 @@ app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', engine: isGemini ? 'Gemini API' : 'OpenRouter' });
+  res.json({ status: 'ok', engine: providerClients.map(p => p.name).join(', ') || 'None' });
 });
 
 app.listen(PORT, () => {
   console.log(`Scriptura Backend Running on port ${PORT}`);
-  console.log(`AI Engine: ${isGemini ? 'Gemini API' : 'OpenRouter'}`);
+  console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
 });
 
 export default app;
