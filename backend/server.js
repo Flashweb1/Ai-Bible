@@ -22,7 +22,7 @@ if (openrouterKey) {
     baseURL: 'https://openrouter.ai/api/v1',
     defaultHeaders: {
       'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
-      'X-Title': 'Scriptura',
+      'X-Title': 'Scripturai',
     },
     models: [
       'deepseek/deepseek-chat',
@@ -236,7 +236,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Scriptura Backend Running on port ${PORT}`);
+  console.log(`Scripturai Backend Running on port ${PORT}`);
   console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
 });
 
