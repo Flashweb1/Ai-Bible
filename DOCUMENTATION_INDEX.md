@@ -1,8 +1,8 @@
-# 📚 Scriptura Documentation Index
+# 📚 Scripturai Documentation Index
 
 > **Status:** Phase 1 Complete ✅ | **Next:** Phase 2 (Performance & PWA)
 
-Welcome! This index helps you navigate all Scriptura documentation.
+Welcome! This index helps you navigate all Scripturai documentation.
 
 ---
 

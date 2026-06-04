@@ -1,4 +1,4 @@
-# 🔧 Backend Integration Guide - Scriptura
+# 🔧 Backend Integration Guide - Scripturai
 
 ## Overview
 This guide explains how to integrate the frontend with the Express backend for secure API calls.
