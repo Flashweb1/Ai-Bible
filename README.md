@@ -1,4 +1,4 @@
-# 📖 Scriptura — Bible AI
+# 📖 Scripturai — Bible AI
 
 A modern React-powered Bible app with reading, notes, prayer tracking, bookmarks, audio playback, and AI-powered study tools.
 

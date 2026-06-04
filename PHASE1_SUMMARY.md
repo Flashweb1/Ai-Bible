@@ -1,4 +1,4 @@
-# 🎉 PHASE 1 COMPLETE - Scriptura Bible App
+# 🎉 PHASE 1 COMPLETE - Scripturai Bible App
 
 ## What Was Accomplished in This Session
 

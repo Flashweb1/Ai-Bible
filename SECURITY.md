@@ -1,7 +1,7 @@
-# 🔐 Security Practices - Scriptura
+# 🔐 Security Practices - Scripturai
 
 ## Overview
-This document outlines security measures implemented in Scriptura to protect user data and prevent attacks.
+This document outlines security measures implemented in Scripturai to protect user data and prevent attacks.
 
 ---
 
