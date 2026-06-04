@@ -78,7 +78,18 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
           }
         } catch (err) {
           if (!abortController.signal.aborted) {
-            setError(err.message);
+            // Provide more specific error messages based on error type
+            let errorMsg = err.message || "Failed to load chapter";
+            
+            if (errorMsg.includes("Could not load chapter")) {
+              errorMsg = "Unable to reach Bible data. Check your internet connection or try again in a moment.";
+            } else if (errorMsg.includes("Book not found")) {
+              errorMsg = "This book is not available in the current translation.";
+            } else if (errorMsg.includes("Failed to fetch")) {
+              errorMsg = "Network error: cannot reach the Bible API. Check your connection.";
+            }
+            
+            setError(errorMsg);
           }
         } finally {
           if (!abortController.signal.aborted) {

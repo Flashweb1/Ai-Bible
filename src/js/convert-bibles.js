@@ -110,7 +110,7 @@ async function convertBibleXMLtoJSON() {
             const xmlVerses = Array.isArray(rawVerses) ? rawVerses : [rawVerses];
             for (const xmlVerse of xmlVerses) {
               // Handle different ways XML stores text (inner content vs attribute)
-              const verseText = typeof xmlVerse === 'string' ? xmlVerse : (xmlVerse._ || xmlProp(xmlVerse, 'text', 't') || '');
+              const verseText = typeof xmlVerse === 'string' ? xmlVerse : (xmlVerse._ || getProp(xmlVerse, 'text', 't') || '');
               
               const cleanText = verseText
                 .replace(/<[^>]*>?/gm, '') // Remove any tags
@@ -126,14 +126,24 @@ async function convertBibleXMLtoJSON() {
             }
           }
 
-          const chapterFileName = chapterNum ? `${chapterNum}.json` : 'unknown.json';
+          if (!chapterNum) {
+            console.warn(`  Warning: Chapter in ${bookAb3} has no number. Skipping.`);
+            continue;
+          }
+          const chapterFileName = `${chapterNum}.json`;
           const chapterFilePath = path.join(bookOutputDir, chapterFileName);
-          fs.writeFileSync(chapterFilePath, JSON.stringify(verses, null, 2), 'utf8');
+          try {
+            fs.writeFileSync(chapterFilePath, JSON.stringify(verses, null, 2), 'utf8');
+          } catch (writeErr) {
+            console.error(`  Error writing chapter ${chapterNum} to ${chapterFileName}:`, writeErr.message);
+            throw writeErr;
+          }
         }
       }
       console.log(`  Successfully processed ${actualFileName}`);
     } catch (error) {
-      console.error(`  Error processing ${actualFileName}:`, error);
+      console.error(`  Fatal error processing ${actualFileName}:`, error.message);
+      process.exit(1);
     }
   }
   console.log('Bible XML to JSON conversion complete!');

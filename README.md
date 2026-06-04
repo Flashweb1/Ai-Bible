@@ -1,18 +1,20 @@
-# 📖 Scripturai — Bible AI
+# 📖 Scripturai — The Living Word
 
-A modern React-powered Bible app with reading, notes, prayer tracking, bookmarks, audio playback, and AI-powered study tools.
+A modern, AI-powered Bible reading and study app built with React and Vite. Features include interactive Scripture reading, AI-powered commentary, prayer tracking, memory quizzes, offline capability, and more.
 
-## Features
+## ✨ Features
 
 - 📖 **Bible Reader** with book/chapter navigation and verse highlighting
-- ✨ **Scholar AI** for Bible commentary and context
-- 🙏 **Prayer Journal** with streak tracking
-- 🎯 **Memory Quiz** for verse review
-- 📝 **Notes & Reflections** for study and journaling
-- 🔖 **Bookmarks** for saved passages
+- ✨ **Scholar AI** for Bible commentary and theological context
+- 🙏 **Prayer Journal** with streak tracking and reflections
+- 🎯 **Memory Quiz** for verse memorization and recall
+- 📝 **Notes & Reflections** for personal study and journaling
+- 🔖 **Bookmarks** for saved passages and cross-references
 - 🎧 **Audio Bible** using browser speech synthesis
-- 🌙 **Dark mode** and display preferences
+- 🌙 **Dark mode** and customizable display preferences
 - 🌐 **Backend AI proxy** with secure API key handling
+- 📱 **Progressive Web App (PWA)** — installable and works offline
+- ⚡ **Fast** — caches Bible chapters locally for instant access
 
 ## Project structure
 

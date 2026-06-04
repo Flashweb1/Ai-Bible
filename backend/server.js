@@ -140,6 +140,18 @@ async function getAIResponseStream(messages, systemPrompt, writeToken) {
 
 app.post('/api/ai/ask', aiLimiter, async (req, res) => {
   const { messages, systemPrompt } = req.body;
+
+  // Input validation
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "Messages must be a non-empty array" });
+  }
+
+  for (const msg of messages) {
+    if (!msg.role || !msg.content) {
+      return res.status(400).json({ error: "Each message must have 'role' and 'content'" });
+    }
+  }
+
   const sys = systemPrompt || "You are 'The Scholar', a warm Bible scholar.";
 
   const cacheString = JSON.stringify({ messages, sys });
