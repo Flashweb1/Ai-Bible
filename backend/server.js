@@ -61,29 +61,10 @@ const providerClients = providers.map(provider => ({
 const activeProviderNames = providerClients.map(p => p.name).join(', ') || 'None';
 console.log(`AI Providers enabled: ${activeProviderNames}`);
 
-const defaultOrigins = [
-  'http://localhost:5173', 
-  'http://127.0.0.1:5173', 
-  'http://localhost:5174', 
-  'http://127.0.0.1:5174'
-];
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : defaultOrigins;
-
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    const isLocal = origin && (origin.includes('localhost') || origin.includes('127.0.0.1'));
-    if (!origin || isLocal || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true,
   methods: ['POST', 'OPTIONS'],
-  credentials: true
+  credentials: true,
 }));
 app.use(express.json());
 
@@ -263,9 +244,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', engine: providerClients.map(p => p.name).join(', ') || 'None' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Scripturai Backend Running on port ${PORT}.`);
-  console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
-});
+if (!process.env.NETLIFY) {
+  app.listen(PORT, () => {
+    console.log(`Scripturai Backend Running on port ${PORT}.`);
+    console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
+  });
+}
 
 export default app;
