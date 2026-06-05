@@ -222,7 +222,7 @@ app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', engine: providerClients.map(p => p.name).join(', ') || 'None' });
+  res.json({ status: 'ok', engine: providerClients.map(p => p.name).join(', ') || 'None', deployed: true });
 });
 
 export const handler = serverless(app);
