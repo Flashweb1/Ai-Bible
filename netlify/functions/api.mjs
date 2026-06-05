@@ -7,7 +7,7 @@ const app = express();
 app.use((req, res, next) => {
   const prefix = '/.netlify/functions/api';
   if (req.url.startsWith(prefix)) {
-    req.url = req.url.slice(prefix.length) || '/';
+    req.url = '/api' + req.url.slice(prefix.length) || '/api';
   }
   next();
 });
