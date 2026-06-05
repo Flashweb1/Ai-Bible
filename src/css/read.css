@@ -79,6 +79,23 @@
   gap: 8px;
 }
 
+@media (max-width: 480px) {
+  .chgrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .chbtn {
+    padding: 10px 0;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .chgrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .chbtn {
   background: var(--surf);
   border: 1px solid var(--bdr2);

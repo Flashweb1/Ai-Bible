@@ -1,0 +1,24 @@
+{
+  "name": "Scripturai",
+  "short_name": "Scripturai",
+  "description": "The Living Word — AI-powered Bible reading and study app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0806",
+  "theme_color": "#C5A059",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -5,13 +5,22 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export const AppContext = createContext();
 
+function loadSavedJSON(key, defaultValue) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
 export function AppProvider({ children }) {
   // Initialize state directly from LocalStorage
-  const [highlights, setHighlights] = useState(() => JSON.parse(localStorage.getItem('sc-hl') || '{}'));
-  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem('sc-bm') || '[]'));
-  const [notes, setNotes] = useState(() => JSON.parse(localStorage.getItem('sc-notes') || '[]'));
-  const [prayers, setPrayers] = useState(() => JSON.parse(localStorage.getItem('sc-prayers') || '[]'));
-  const [devotionals, setDevotionals] = useState(() => JSON.parse(localStorage.getItem('sc-devotions') || '[]'));
+  const [highlights, setHighlights] = useState(() => loadSavedJSON('sc-hl', {}));
+  const [bookmarks, setBookmarks] = useState(() => loadSavedJSON('sc-bm', []));
+  const [notes, setNotes] = useState(() => loadSavedJSON('sc-notes', []));
+  const [prayers, setPrayers] = useState(() => loadSavedJSON('sc-prayers', []));
+  const [devotionals, setDevotionals] = useState(() => loadSavedJSON('sc-devotions', []));
   
   const [user, setUser] = useState(null);
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);

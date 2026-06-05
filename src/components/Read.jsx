@@ -3,6 +3,8 @@ import { getChapter } from '../js/api.js';
 import { BOOKS, TRANSLATIONS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
 import VerseSheetModal from './VerseSheetModal.jsx';
+import { ChapterSkeleton } from './Skeleton.jsx';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 const ArrowLeftIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -11,6 +13,7 @@ const ArrowLeftIcon = () => (
 );
 
 export default function Read({ setTab, selectedBook, setSelectedBook, currentChapter, setCurrentChapter }) {
+  usePageTitle(selectedBook ? `${selectedBook.n} ${currentChapter}` : 'Read');
   // State mapping from global scripturai.html variables
   const [step, setStep] = useState(selectedBook ? 'verses' : 'book'); // 'book', 'chapter', 'verses'
   const [testament, setTestament] = useState('OT');
@@ -293,7 +296,7 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
         </button>
       </div>
 
-      {loading && <div className="ldmsg">✦ Loading scripture…</div>}
+      {loading && <ChapterSkeleton />}
       {error && <div className="errmsg">{error}</div>}
       
       {!loading && !error && verses.length > 0 && (

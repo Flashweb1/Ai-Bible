@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" fill="#0A0806"/>
+  <text x="256" y="340" font-family="'Playfair Display', Georgia, serif" font-size="320" font-weight="700" fill="#C5A059" text-anchor="middle">S</text>
+  <circle cx="400" cy="112" r="48" fill="#C5A059" opacity="0.15"/>
+  <circle cx="112" cy="400" r="36" fill="#C5A059" opacity="0.1"/>
+</svg>

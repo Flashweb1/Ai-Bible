@@ -3,6 +3,8 @@ import { askAIStream, getCommentary } from '../js/api.js';
 import { SUGGESTIONS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
 import { renderSafeMarkdown, sanitizeUserInput, validateDevotionalInput } from '../lib/sanitize.js';
+import { useToast } from './Toast.jsx';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 // Removed: renderMsg function - now using renderSafeMarkdown from sanitize.js
 
@@ -55,7 +57,9 @@ const DEVOTIONAL_TOPICS = [
   "Forgiveness & Healing",
 ];
 
-export default function Scholar({ selectedBook, currentChapter }) {
+export default function Scholar({ selectedBook, currentChapter, user, onLoginClick }) {
+  usePageTitle('Scholar');
+  const showToast = useToast();
   const { devotionals, addDevotional, updateDevotionalDay, deleteDevotional } = useAppContext();
   
   // Tabs: 'chat' (AI Guide) or 'devotionals'
@@ -125,7 +129,7 @@ export default function Scholar({ selectedBook, currentChapter }) {
     const validation = sanitizeUserInput(msg);
     
     if (!validation.valid) {
-      alert(validation.error || 'Invalid input');
+      showToast(validation.error || 'Invalid input');
       return;
     }
     
@@ -184,7 +188,7 @@ End with a short question to continue the discussion.`;
     // Validate all devotional inputs
     const validation = validateDevotionalInput(topic, devotionalDays, devotionalStyle);
     if (!validation.valid) {
-      alert('Invalid input: ' + validation.errors.join(', '));
+      showToast(validation.errors.join(', '));
       return;
     }
     
@@ -231,11 +235,11 @@ DAY 2: ... (repeat for each day)
         setActivePlanId(newPlan.id);
         setCreatingDevotional(false);
       } else {
-        alert("Failed to parse the devotional. Please try again with a different topic.");
+        showToast("Failed to parse the devotional. Try a different topic.");
       }
     } catch (error) {
       console.error(error);
-      alert("Error generating devotional plan. Please check backend connection.");
+      showToast("Error generating devotional plan. Check backend connection.");
     } finally {
       setLoading(false);
     }
@@ -254,6 +258,13 @@ DAY 2: ... (repeat for each day)
 
   return (
     <div className="aiwrap">
+      {!user && !localStorage.getItem('sc-auth-dismiss-scholar') && (
+        <div className="auth-prompt">
+          <span>🔒 Sign in to save your AI chat history</span>
+          <button className="auth-prompt-btn" onClick={onLoginClick}>Sign In</button>
+          <button className="auth-prompt-close" onClick={() => localStorage.setItem('sc-auth-dismiss-scholar', '1')}>✕</button>
+        </div>
+      )}
       {/* Premium Tab Toggle */}
       <div className="ttog" style={{ marginBottom: '14px' }}>
         <button className={`tbtn ${subView === 'chat' ? 'on' : ''}`} onClick={() => setSubView('chat')}>AI Guide</button>

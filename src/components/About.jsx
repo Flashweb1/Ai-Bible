@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { auth } from '../lib/firebase.js';
 import { signOut } from 'firebase/auth';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 export default function About({ user, setTab }) {
+  usePageTitle('About');
   const [subView, setSubView] = useState('about');
   const [feedbackName, setFeedbackName] = useState('');
   const [feedbackEmail, setFeedbackEmail] = useState('');

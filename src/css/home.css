@@ -251,6 +251,19 @@
   text-transform: uppercase;
 }
 
+@media (max-width: 480px) {
+  .qgrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .qitem {
+    min-height: 80px;
+    padding: 12px 10px;
+  }
+  .qitem-ico {
+    font-size: 20px;
+  }
+}
+
 /* ═══════════════════════════════════════ */
 /* FEATURED ITEMS */
 /* ═══════════════════════════════════════ */

@@ -1,10 +1,12 @@
 import React from 'react';
 import { DAILY, QUICK_BOOKS, MEMORY_VERSES } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 import { BOOKS } from '../js/data.js';
 
 export default function Home({ setTab, user, onLogout, onLoginClick, setSelectedBook, setCurrentChapter }) {
+  usePageTitle('Home');
   const verse = DAILY[new Date().getDay() % DAILY.length];
   const { notes, prayers, streak } = useAppContext();
   const prayersLength = prayers ? prayers.length : 0;

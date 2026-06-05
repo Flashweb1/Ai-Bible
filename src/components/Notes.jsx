@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../AppContext.jsx';
+import { useToast } from './Toast.jsx';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
-export default function Notes() {
+function generateId() {
+  try { return crypto.randomUUID(); } catch { return 'nt-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9); }
+}
+
+export default function Notes({ user, onLoginClick }) {
+    usePageTitle('Notes');
+    const showToast = useToast();
     const { notes, setNotes } = useAppContext();
     const [editingNote, setEditingNote] = useState(null);
     const [title, setTitle] = useState('');
@@ -35,7 +43,7 @@ export default function Notes() {
 
     const handleSave = () => {
         if (!content.trim() && !title.trim()) {
-            alert("Note cannot be empty.");
+            showToast("Note cannot be empty.");
             return;
         }
 
@@ -53,7 +61,7 @@ export default function Notes() {
         } else {
             // Create new note
             const newNoteObj = {
-                id: `nt-${crypto.randomUUID()}`,
+                id: generateId(),
                 ...noteData,
                 createdAt: new Date().toISOString()
             };
@@ -162,6 +170,13 @@ export default function Notes() {
 
     return (
         <div className="fade-in">
+            {!user && !localStorage.getItem('sc-auth-dismiss-notes') && (
+              <div className="auth-prompt">
+                <span>🔒 Sign in to sync your notes across devices</span>
+                <button className="auth-prompt-btn" onClick={onLoginClick}>Sign In</button>
+                <button className="auth-prompt-close" onClick={() => localStorage.setItem('sc-auth-dismiss-notes', '1')}>✕</button>
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '13px' }}>
                 <span className="lbl" style={{ margin: 0 }}>My Notes ({notes.length})</span>
             </div>

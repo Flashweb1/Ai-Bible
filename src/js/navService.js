@@ -79,7 +79,7 @@ export const navService = {
    * @param {string} pageId 
    */
   requiresAuth(pageId) {
-    const protectedPages = ['notes', 'prayer', 'bookmarks', 'reading_plans', 'profile'];
+    const protectedPages = ['notes', 'prayer', 'bookmarks'];
     return protectedPages.includes(pageId);
   }
 };

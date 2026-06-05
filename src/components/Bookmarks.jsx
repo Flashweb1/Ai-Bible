@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../AppContext.jsx';
 import { BOOKS } from '../js/data.js';
+import { useToast } from './Toast.jsx';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }) {
+  usePageTitle('Bookmarks');
+  const showToast = useToast();
   const { bookmarks, deleteBookmark } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -17,7 +21,7 @@ export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }
 
   const handleCopy = (b) => {
     navigator.clipboard.writeText(`"${b.text}" — ${b.bn} ${b.ch}:${b.vn}`);
-    alert('Verse copied to clipboard!');
+    showToast('Verse copied to clipboard!');
   };
 
   const handleAskScholar = (b) => {
@@ -93,7 +97,7 @@ export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }
                 <button 
                   className="hbtn" 
                   style={{ fontSize: '10px', padding: '4px 10px', borderColor: 'rgba(240, 80, 80, 0.4)', color: '#ff6b6b' }} 
-                  onClick={() => deleteBookmark(b.id)}
+                  onClick={() => { if (window.confirm('Remove this bookmark?')) deleteBookmark(b.id); }}
                 >
                   ✕ Remove
                 </button>

@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../AppContext.jsx';
+import { useToast } from './Toast.jsx';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 export default function Pray() {
+    usePageTitle('Prayer Journal');
+    const showToast = useToast();
     const { prayers, setPrayers, streak } = useAppContext();
     const [prayerText, setPrayerText] = useState('');
 
@@ -23,6 +27,12 @@ export default function Pray() {
             isToday: i === 29
         };
     });
+
+    const handleDeletePrayer = (id) => {
+        if (!window.confirm('Delete this prayer?')) return;
+        setPrayers(prev => prev.filter(p => p.id !== id));
+        showToast('Prayer removed');
+    };
 
     const handleAddPrayer = () => {
         if (!prayerText.trim()) return;
@@ -95,8 +105,17 @@ export default function Pray() {
                 ) : (
                     prayers.map(p => (
                         <div key={p.id} className="card" style={{ marginBottom: '15px', padding: '15px' }}>
-                            <div style={{ fontSize: '12px', opacity: 0.5, marginBottom: '8px', fontFamily: "'Playfair Display', serif", color: 'var(--gold)' }}>
-                                {formatDate(p.createdAt)}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div style={{ fontSize: '12px', opacity: 0.5, marginBottom: '8px', fontFamily: "'Playfair Display', serif", color: 'var(--gold)' }}>
+                                    {formatDate(p.createdAt)}
+                                </div>
+                                <button
+                                    onClick={() => handleDeletePrayer(p.id)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '16px', padding: '2px 6px', lineHeight: 1 }}
+                                    title="Delete prayer"
+                                >
+                                    ✕
+                                </button>
                             </div>
                             <div style={{ fontStyle: 'italic', color: 'var(--text)', fontSize: '15px', lineHeight: '1.5' }}>
                                 "{p.text}"

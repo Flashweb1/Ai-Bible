@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadPreferences, savePreferences, applyPreferences } from '../js/preferences.js';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 const FONT_FAMILIES = [
   { id: 'system', label: 'System', value: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' },
@@ -57,6 +58,7 @@ function hslToHex(h, s, l) {
 }
 
 export default function Settings({ isDark, setIsDark, setTab }) {
+  usePageTitle('Settings');
   const [prefs, setPrefs] = useState(() => loadPreferences() || { theme: isDark ? 'dark' : 'light', fontFamily: FONT_FAMILIES[0].value, fontScale: 1, accent: 'hsl(348 70% 45%)', accentCompl: 'hsl(168 70% 45%)' });
 
   useEffect(() => {
@@ -122,39 +124,38 @@ export default function Settings({ isDark, setIsDark, setTab }) {
 
       <div className="setting-group">
         <div className="section-title">Color Mode</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className={`theme-btn ${prefs.theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>Light</button>
-          <button className={`theme-btn ${prefs.theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>Dark</button>
+        <div className="opt-group">
+          <button className={`opt-btn ${prefs.theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>Light</button>
+          <button className={`opt-btn ${prefs.theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>Dark</button>
+          <button className={`opt-btn ${prefs.theme === 'sepia' ? 'active' : ''}`} onClick={() => setTheme('sepia')}>Sepia</button>
         </div>
       </div>
 
       <div className="setting-group">
         <div className="section-title">Accent Color</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="color-row">
           <input type="color" value={prefs.accent?.startsWith('#') ? prefs.accent : '#b71c1c'} onChange={(e) => setAccent(e.target.value)} />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div style={{ width: 24, height: 24, background: prefs.accent }} />
-            <div style={{ width: 24, height: 24, background: prefs.accentCompl }} />
-          </div>
+          <div className="color-swatch" style={{ background: prefs.accent }} />
+          <div className="color-swatch" style={{ background: prefs.accentCompl }} />
         </div>
       </div>
 
       <div className="setting-group">
         <div className="section-title">Font Family</div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="opt-group">
           {FONT_FAMILIES.map((f) => (
-            <button key={f.id} className={`theme-btn ${prefs.fontFamily === f.value ? 'active' : ''}`} onClick={() => setFontFamily(f.value)}>{f.label}</button>
+            <button key={f.id} className={`opt-btn ${prefs.fontFamily === f.value ? 'active' : ''}`} onClick={() => setFontFamily(f.value)}>{f.label}</button>
           ))}
         </div>
       </div>
 
       <div className="setting-group">
         <div className="section-title">Font Size</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className={`theme-btn ${prefs.fontScale === 0.9 ? 'active' : ''}`} onClick={() => setFontScale(0.9)}>A-</button>
-          <button className={`theme-btn ${prefs.fontScale === 1 ? 'active' : ''}`} onClick={() => setFontScale(1)}>A</button>
-          <button className={`theme-btn ${prefs.fontScale === 1.2 ? 'active' : ''}`} onClick={() => setFontScale(1.2)}>A+</button>
-          <button className={`theme-btn ${prefs.fontScale === 1.4 ? 'active' : ''}`} onClick={() => setFontScale(1.4)}>A++</button>
+        <div className="opt-group">
+          <button className={`opt-btn ${prefs.fontScale === 0.9 ? 'active' : ''}`} onClick={() => setFontScale(0.9)}>A-</button>
+          <button className={`opt-btn ${prefs.fontScale === 1 ? 'active' : ''}`} onClick={() => setFontScale(1)}>A</button>
+          <button className={`opt-btn ${prefs.fontScale === 1.2 ? 'active' : ''}`} onClick={() => setFontScale(1.2)}>A+</button>
+          <button className={`opt-btn ${prefs.fontScale === 1.4 ? 'active' : ''}`} onClick={() => setFontScale(1.4)}>A++</button>
         </div>
       </div>
 

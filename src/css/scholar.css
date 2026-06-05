@@ -5,7 +5,7 @@
 .aiwrap {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 190px);
+  height: calc(100dvh - 190px);
   min-height: 400px;
 }
 
@@ -63,6 +63,14 @@
   line-height: 1.6;
   box-shadow: 0 4px 12px var(--sh2);
   transition: transform 0.2s ease;
+}
+
+@media (max-width: 480px) {
+  .bub {
+    max-width: 92%;
+    font-size: 14px;
+    padding: 10px 14px;
+  }
 }
 
 .bu {

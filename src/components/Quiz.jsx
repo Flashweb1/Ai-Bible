@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MEMORY_VERSES } from '../js/data.js';
+import { usePageTitle } from '../hooks/usePageTitle.js';
 
 export default function Quiz() {
+    usePageTitle('Memory Quiz');
     const [view, setView] = useState('menu'); // menu, active, done
     const [index, setIndex] = useState(0);
     const [knownCount, setKnownCount] = useState(0);
