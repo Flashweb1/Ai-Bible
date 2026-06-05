@@ -1,4 +1,9 @@
 [[redirects]]
+  from = "/verify-deploy"
+  to = "https://example.com"
+  status = 301
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/health"
   status = 200
