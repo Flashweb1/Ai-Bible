@@ -5,12 +5,22 @@ import { usePageTitle } from '../hooks/usePageTitle.js';
 
 import { BOOKS } from '../js/data.js';
 
-export default function Home({ setTab, user, onLogout, onLoginClick, setSelectedBook, setCurrentChapter }) {
+export default function Home({ selectedBook, currentChapter, setTab, user, onLogout, onLoginClick, setSelectedBook, setCurrentChapter }) {
   usePageTitle('Home');
-  const verse = DAILY[new Date().getDay() % DAILY.length];
+  
+  // Get day of the year to ensure variety if DAILY array > 7
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  const oneDay = 1000 * 60 * 60 * 24;
+  const dayOfYear = Math.floor(diff / oneDay);
+  const verse = DAILY[dayOfYear % DAILY.length];
+
   const { notes, prayers, streak } = useAppContext();
   const prayersLength = prayers ? prayers.length : 0;
   const notesLength = notes ? notes.length : 0;
+  const recentReading = selectedBook ? `${selectedBook.n} ${currentChapter}` : null;
+  const continueLabel = recentReading ? `Continue reading ${recentReading}` : 'Start your first reading';
 
   return (
     <>
@@ -39,12 +49,26 @@ export default function Home({ setTab, user, onLogout, onLoginClick, setSelected
         <div className="hero-txt">"{verse.text}"</div>
         <div className="hero-ref">— {verse.ref}</div>
         <div className="hero-acts">
-          <button className="hbtn" onClick={() => { localStorage.setItem('sc-scholar-query', `Explain the significance of ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Explain</button>
-          <button className="hbtn" onClick={() => { localStorage.setItem('sc-scholar-query', `Write a heartfelt prayer based on ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Pray It</button>
+          <button className="hbtn" type="button" onClick={() => { localStorage.setItem('sc-scholar-query', `Explain the significance of ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Explain</button>
+          <button className="hbtn" type="button" onClick={() => { localStorage.setItem('sc-scholar-query', `Write a heartfelt prayer based on ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Pray It</button>
         </div>
       </div>
 
-      <div className="sbadge" onClick={() => setTab('pray')}>
+      <div className="onboard-card">
+        <div className="onboard-head">How to use Scripturai</div>
+        <div className="onboard-copy">Read Scripture with audio, ask the Scholar for Bible insights, save notes and prayers, and create AI-guided devotionals.</div>
+        <div className="onboard-actions">
+          <button type="button" className="hbtn" onClick={() => setTab('read')}>Read Scripture</button>
+          <button type="button" className="hbtn" onClick={() => setTab('scholar')}>Ask the Scholar</button>
+        </div>
+      </div>
+
+      <div className="continue-card">
+        <div className="continue-copy">{recentReading ? `Continue where you left off:` : 'Continue your study journey'}</div>
+        <button type="button" className="hbtn" onClick={() => setTab('read')}>{continueLabel}</button>
+      </div>
+
+      <button className="sbadge" type="button" onClick={() => setTab('pray')} aria-label="Open the prayer journal">
         <div className="sbl">
           <div className="sb-fl">🔥</div>
           <div>
@@ -55,21 +79,21 @@ export default function Home({ setTab, user, onLogout, onLoginClick, setSelected
         <div className="sb-cta">
           {streak === 0 ? "Start today →" : streak < 7 ? "Keep it up! →" : "Faithful! →"}
         </div>
-      </div>
+      </button>
 
       <span className="lbl">Quick Access</span>
       <div className="qgrid">
         {QUICK_BOOKS.map((b) => {
           const bookObj = BOOKS.find(x => x.n === b) || BOOKS.find(x => x.ab.toLowerCase() === b.toLowerCase());
           return (
-            <div key={b} className="qitem" onClick={() => {
+            <button key={b} type="button" className="qitem" onClick={() => {
               if (bookObj && setSelectedBook) setSelectedBook(bookObj);
               if (setCurrentChapter) setCurrentChapter(1);
               setTab('read');
-            }}>
+            }} aria-label={`Read ${b}`}>
               <div className="qitem-ico">📖</div>
               <div className="qitem-lbl">{b}</div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -82,41 +106,41 @@ export default function Home({ setTab, user, onLogout, onLoginClick, setSelected
 
       <span className="lbl">Explore</span>
 
-      <div className="feat" onClick={() => setTab('read')}>
+      <button className="feat" type="button" onClick={() => setTab('read')} aria-label="Open Scripture reader">
         <span className="feat-ico">📖</span>
         <div>
           <div className="feat-tit">Read Scripture</div>
           <div className="feat-sub">66 books · 4 translations · audio · highlights</div>
         </div>
-      </div>
-      <div className="feat" onClick={() => setTab('scholar')}>
+      </button>
+      <button className="feat" type="button" onClick={() => setTab('scholar')} aria-label="Open the Scholar AI">
         <span className="feat-ico">✨</span>
         <div>
           <div className="feat-tit">The Scholar</div>
           <div className="feat-sub">AI explanations, cross-refs, prayers & devotions</div>
         </div>
-      </div>
-      <div className="feat" onClick={() => setTab('pray')}>
+      </button>
+      <button className="feat" type="button" onClick={() => setTab('pray')} aria-label="Open the prayer journal">
         <span className="feat-ico">🙏</span>
         <div>
           <div className="feat-tit">Prayer Journal</div>
           <div className="feat-sub">{prayersLength} prayer{prayersLength !== 1 ? 's' : ''} · {streak}-day streak</div>
         </div>
-      </div>
-      <div className="feat" onClick={() => setTab('quiz')}>
+      </button>
+      <button className="feat" type="button" onClick={() => setTab('quiz')} aria-label="Open the memory verse quiz">
         <span className="feat-ico">🎯</span>
         <div>
           <div className="feat-tit">Memory Verse Quiz</div>
           <div className="feat-sub">Flashcards · {MEMORY_VERSES.length} key verses</div>
         </div>
-      </div>
-      <div className="feat" onClick={() => setTab('notes')}>
+      </button>
+      <button className="feat" type="button" onClick={() => setTab('notes')} aria-label="Open the notes page">
         <span className="feat-ico">📝</span>
         <div>
           <div className="feat-tit">My Notes</div>
           <div className="feat-sub">{notesLength} note{notesLength !== 1 ? 's' : ''} saved</div>
         </div>
-      </div>
+      </button>
     </>
   );
 }

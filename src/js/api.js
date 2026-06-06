@@ -51,7 +51,11 @@ export async function getChapter(bookNum, chapter, translation) {
   if (cache.has(cacheKey)) return cache.get(cacheKey);
 
   const local = getLocal(cacheKey);
-  if (local) { cache.set(cacheKey, local); return local; }
+  if (local) {
+    const normalized = Array.isArray(local) ? { verses: local, source: 'cached' } : local;
+    cache.set(cacheKey, normalized);
+    return normalized;
+  }
 
   const ab3 = book.ab3;
   const tid = HAO_TID[tKey];
@@ -59,15 +63,17 @@ export async function getChapter(bookNum, chapter, translation) {
   // Race all APIs — first one with valid verses wins
   // Prioritize local files for speed and offline access
   const race = [];
+  
+  const baseUrl = import.meta.env.BASE_URL || '/';
 
   // 1. Local JSON files (highest priority)
   race.push(
-    fetch(`/bibles/${tKey}/${book.ab3.toLowerCase()}/${chapter}.json`)
+    fetch(`${baseUrl}bibles/${tKey}/${book.ab3.toLowerCase()}/${chapter}.json`, { signal: AbortSignal.timeout(5000) })
       .then(response => {
         if (!response.ok) throw new Error("Local file not found");
         return response.json();
       })
-      .then(verses => { if (!verses.length) throw new Error("Empty local verses"); return verses; })
+      .then(verses => { if (!Array.isArray(verses) || !verses.length) throw new Error("Empty local verses"); return { verses, source: 'local file' }; })
   );
 
   if (tid) {
@@ -79,8 +85,8 @@ export async function getChapter(bookNum, chapter, translation) {
             text: v.content
               .map(c => typeof c === 'string' ? c : (c.text || ''))
               .join('')
-              .replace(/<[^>]*>?/gm, '') // Strip HTML
-              .replace(/\d{3,5}/g, '') // Strip Strong's numbers (3-5 digits)
+              .replace(/<[^>]*>?/gm, '')
+              .replace(/\b[GH]\d{1,4}\b/g, '')
               .trim()
           }));
           if (!verses.length) throw new Error("Empty verses");
@@ -98,8 +104,8 @@ export async function getChapter(bookNum, chapter, translation) {
           return d.map(v => ({
             verse: v.verse,
             text: v.text
-              .replace(/<[^>]*>?/gm, '') // Strip HTML
-              .replace(/\d{3,5}/g, '') // Strip Strong's numbers (Indices)
+              .replace(/<[^>]*>?/gm, '')
+              .replace(/\b[GH]\d{1,4}\b/g, '')
               .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '') // Strip Margin Notes
               .trim()
           }));
@@ -112,7 +118,7 @@ export async function getChapter(bookNum, chapter, translation) {
       .then(d => {
         const verses = (d?.verses || []).map(v => ({ verse: v.verse, text: v.text.trim() }));
         if (!verses.length) throw new Error("Empty verses");
-        return verses;
+        return { verses, source: 'Bible API' };
       })
   );
 
@@ -121,29 +127,33 @@ export async function getChapter(bookNum, chapter, translation) {
       .then(d => {
         const verses = Object.values(d?.verses || {}).map(v => ({ verse: v.verse, text: v.text.trim() }));
         if (!verses.length) throw new Error("Empty verses");
-        return verses;
+        return { verses, source: 'GetBible' };
       })
   );
 
-  try {
-    // If Promise.any fails, it throws an AggregateError. 
-    // We catch it to provide a better error message.
-    const winner = await Promise.any(race).catch(() => {
-      throw new Error(`All Bible sources failed for ${book.n} ${chapter}`);
-    });
+  const winner = await Promise.any(race).catch(() => {
+    throw new Error(`All Bible sources failed for ${book.n} ${chapter}`);
+  });
 
-    cache.set(cacheKey, winner);
-    setLocal(cacheKey, winner);
-    return winner;
-  } catch (err) {
-    throw err;
-  }
+  const normalizedWinner = Array.isArray(winner) ? { verses: winner, source: 'unknown' } : winner;
+  cache.set(cacheKey, normalizedWinner);
+  setLocal(cacheKey, normalizedWinner);
+  return normalizedWinner;
+}
+
+/**
+ * Helper to get the correct API base URL
+ */
+function getApiBase() {
+  const envUrl = import.meta.env.VITE_API_URL || '';
+  if (!envUrl) return '';
+  // Normalize: Remove trailing slashes and the /api suffix if the user included it
+  return envUrl.replace(/\/+$/, '').replace(/\/api$/, '');
 }
 
 export async function askAI(messages, systemPrompt) {
   // Use relative path in dev to leverage Vite proxy, or absolute URL in prod
-  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '').replace(/\/api$/, '');
-  const endpoint = `${base}/api/ai/ask`;
+  const endpoint = `${getApiBase()}/api/ai/ask`;
 
   console.log(`[API] Fetching AI Response from: ${endpoint}`);
   const ac = new AbortController();
@@ -163,21 +173,26 @@ export async function askAI(messages, systemPrompt) {
       try { msg = JSON.parse(text).error; } catch { msg = text || `Server error (${res.status})`; }
       throw new Error(msg);
     }
-
+    
     const data = await res.json();
     return data.response;
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('AI request timed out. Please try again.');
+    throw err;
   } finally {
     clearTimeout(timer);
   }
 }
 
-export async function askAIStream(messages, systemPrompt, onToken) {
-  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '').replace(/\/api$/, '');
-  const endpoint = `${base}/api/ai/ask/stream`;
+export async function askAIStream(messages, systemPrompt, onToken, externalSignal) {
+  const endpoint = `${getApiBase()}/api/ai/ask/stream`;
 
   console.log(`[API] Opening AI Stream at: ${endpoint}`);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
+  if (externalSignal) {
+    externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
 
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -212,12 +227,15 @@ export async function askAIStream(messages, systemPrompt, onToken) {
 
     for (const line of lines) {
       const trimmedLine = line.trim();
-      if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+      if (!trimmedLine || !trimmedLine.startsWith('data:')) continue;
+      
+      // Remove 'data: ' prefix (handles both 'data:' and 'data: ')
+      const jsonStr = trimmedLine.replace(/^data:\s*/, '');
       
       try {
-        const data = JSON.parse(trimmedLine.slice(6));
+        const data = JSON.parse(jsonStr);
         if (data.done) return;
-        if (data.token) onToken(data.token);
+        if (data.token !== undefined && data.token !== null) onToken(data.token);
       } catch (e) {
         // Silent catch for partial JSON chunks, will be picked up in next read
       }

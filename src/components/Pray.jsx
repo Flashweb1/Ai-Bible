@@ -6,7 +6,7 @@ import { usePageTitle } from '../hooks/usePageTitle.js';
 export default function Pray() {
     usePageTitle('Prayer Journal');
     const showToast = useToast();
-    const { prayers, setPrayers, streak } = useAppContext();
+    const { prayers = [], setPrayers, streak } = useAppContext();
     const [prayerText, setPrayerText] = useState('');
 
     // Generate dynamic 30-day dots based on prayer history

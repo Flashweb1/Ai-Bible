@@ -171,6 +171,63 @@
   margin-top: 24px;
 }
 
+.onboard-card,
+.continue-card {
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  border-radius: 24px;
+  padding: 22px 20px;
+  box-shadow: 0 16px 40px var(--sh2);
+  margin-bottom: 20px;
+}
+
+.onboard-head,
+.continue-copy {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--prime);
+  margin-bottom: 10px;
+}
+
+.onboard-copy {
+  font-family: var(--font-family-ui);
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+
+.onboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.continue-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.continue-card .hbtn {
+  min-width: 160px;
+}
+
+.status-pill {
+  display: inline-block;
+  background: var(--gpale);
+  border: 1px solid var(--bdr2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: var(--font-family-ui);
+  font-size: 11px;
+  color: var(--prime);
+  margin-right: 10px;
+  margin-bottom: 8px;
+}
+
 .hbtn {
   background: var(--surf);
   border: 1px solid var(--bdr2);
@@ -254,6 +311,7 @@
 @media (max-width: 480px) {
   .qgrid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   .qitem {
     min-height: 80px;
@@ -261,6 +319,21 @@
   }
   .qitem-ico {
     font-size: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .qgrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .qitem {
+    min-height: 72px;
+    padding: 10px 8px;
+    border-radius: 16px;
+  }
+  .qitem-lbl {
+    font-size: 9px;
   }
 }
 

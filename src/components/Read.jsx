@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getChapter } from '../js/api.js';
 import { BOOKS, TRANSLATIONS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
@@ -25,6 +25,8 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [chapterSource, setChapterSource] = useState('');
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' ? !navigator.onLine : false);
 
   const { highlights, toggleHighlight, addBookmark } = useAppContext();
   const [sheetVerse, setSheetVerse] = useState(null); // Tracks the verse currently opened in the modal
@@ -35,8 +37,10 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
   const [isPaused, setIsPaused] = useState(false);
   const [activeVerseIndex, setActiveVerseIndex] = useState(-1);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const playbackSpeedRef = useRef(1);
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState('');
+  const selectedVoiceRef = useRef('');
 
   // Load voices on mount
   useEffect(() => {
@@ -71,13 +75,14 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
     const abortController = new AbortController();
     
     if (step === 'verses' && selectedBook) {
-      async function fetchVerses() {
+      const fetchVerses = async () => {
         setLoading(true);
         setError(null);
         try {
           const data = await getChapter(selectedBook.num, currentChapter, translation);
           if (!abortController.signal.aborted) {
-            setVerses(data);
+            setVerses(data.verses);
+            setChapterSource(data.source || 'unknown');
           }
         } catch (err) {
           if (!abortController.signal.aborted) {
@@ -106,6 +111,19 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
     return () => abortController.abort();
   }, [step, selectedBook, currentChapter, translation]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const onOnline = () => setIsOffline(false);
+      const onOffline = () => setIsOffline(true);
+      window.addEventListener('online', onOnline);
+      window.addEventListener('offline', onOffline);
+      return () => {
+        window.removeEventListener('online', onOnline);
+        window.removeEventListener('offline', onOffline);
+      };
+    }
+  }, []);
+
   const speakVerse = (index) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
@@ -120,10 +138,11 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
     const cleanedText = verse.text.replace(/\[|\]/g, '');
     const utterance = new SpeechSynthesisUtterance(cleanedText);
     
-    utterance.rate = playbackSpeed;
+    utterance.rate = playbackSpeedRef.current;
 
-    if (selectedVoice) {
-      const voiceObj = voices.find(v => v.name === selectedVoice);
+    const voiceName = selectedVoiceRef.current;
+    if (voiceName) {
+      const voiceObj = voices.find(v => v.name === voiceName);
       if (voiceObj) utterance.voice = voiceObj;
     }
 
@@ -191,17 +210,19 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
 
   const handleVoiceChange = (e) => {
     const vName = e.target.value;
+    selectedVoiceRef.current = vName;
     setSelectedVoice(vName);
     if (isPlaying && activeVerseIndex >= 0) {
-      setTimeout(() => speakVerse(activeVerseIndex), 50);
+      speakVerse(activeVerseIndex);
     }
   };
 
   const handleSpeedChange = (e) => {
     const sp = parseFloat(e.target.value);
+    playbackSpeedRef.current = sp;
     setPlaybackSpeed(sp);
     if (isPlaying && activeVerseIndex >= 0) {
-      setTimeout(() => speakVerse(activeVerseIndex), 50);
+      speakVerse(activeVerseIndex);
     }
   };
 
@@ -257,6 +278,10 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
       <div className="rhdr">
         <div className="rbook">{selectedBook.n}</div>
         <div className="rch">Chapter {currentChapter} · {TRANSLATIONS[translation] || 'KJV'}</div>
+      </div>
+      <div className="chapter-meta">
+        {isOffline && <span className="status-pill">Offline mode</span>}
+        <span className="status-pill">Source: {chapterSource || 'unknown'}</span>
       </div>
       
       <div className="rtbar">

@@ -70,6 +70,20 @@ export default function Scholar({ selectedBook, currentChapter, user, onLoginCli
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
+  const abortRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const accumulatedRef = useRef('');
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+    };
+  }, []);
 
   // Commentary Mode
   const [useCommentary, setUseCommentary] = useState(false);
@@ -124,6 +138,18 @@ export default function Scholar({ selectedBook, currentChapter, user, onLoginCli
     }
   }, []);
 
+  const flushTokens = (aiIndex) => {
+    const content = accumulatedRef.current;
+    if (!isMountedRef.current) return;
+    setMessages(prev => {
+      const updated = [...prev];
+      if (updated[aiIndex]) {
+        updated[aiIndex] = { role: 'assistant', content };
+      }
+      return updated;
+    });
+  };
+
   const handleSend = async (text) => {
     const msg = text || input;
     const validation = sanitizeUserInput(msg);
@@ -157,28 +183,49 @@ End with a short question to continue the discussion.`;
     setInput('');
     setLoading(true);
 
+    accumulatedRef.current = '';
+
+    const ac = new AbortController();
+    abortRef.current = ac;
+
+    let rafId = null;
+    const scheduleFlush = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        flushTokens(aiIndex);
+      });
+    };
+
     try {
-      let accumulated = '';
       await askAIStream(newMessages, systemPrompt, (token) => {
-        accumulated += token;
+        accumulatedRef.current += token;
+        scheduleFlush();
+      }, ac.signal);
+      if (rafId) cancelAnimationFrame(rafId);
+      flushTokens(aiIndex);
+    } catch (error) {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (ac.signal.aborted && isMountedRef.current) {
         setMessages(prev => {
           const updated = [...prev];
-          updated[aiIndex] = { role: 'assistant', content: accumulated };
+          updated[aiIndex] = { role: 'assistant', content: accumulatedRef.current || '⚠️ Response was cancelled.' };
           return updated;
         });
-      });
-    } catch (error) {
-      const isNetErr = !error.message || /failed|network|abort|timeout|fetch/i.test(error.message);
-      const errorMsg = isNetErr
-        ? "AI server not reachable. Open a NEW terminal, cd backend, then run: npm run dev"
-        : error.message;
-      setMessages(prev => {
-        const updated = [...prev];
-        updated[aiIndex] = { role: 'assistant', content: `⚠️ ${errorMsg}` };
-        return updated;
-      });
+      } else if (isMountedRef.current) {
+        const isNetErr = !error.message || /failed|network|abort|timeout|fetch/i.test(error.message);
+        const errorMsg = isNetErr
+          ? "AI server not reachable. Open a NEW terminal, cd backend, then run: npm run dev"
+          : error.message;
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[aiIndex] = { role: 'assistant', content: `⚠️ ${errorMsg}` };
+          return updated;
+        });
+      }
     } finally {
-      setLoading(false);
+      abortRef.current = null;
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
@@ -265,6 +312,18 @@ DAY 2: ... (repeat for each day)
           <button className="auth-prompt-close" onClick={() => localStorage.setItem('sc-auth-dismiss-scholar', '1')}>✕</button>
         </div>
       )}
+      <div className="ai-status-card">
+        <div className="ai-status-row">
+          <span className="lbl" style={{ margin: 0 }}>Scholar status</span>
+          <div className="ai-status-line">
+            {selectedBook ? (
+              <>Current passage: <strong>{selectedBook.n} {currentChapter}</strong></>
+            ) : (
+              <>No passage selected. Open Read and select a chapter to ground your questions.</>
+            )}
+          </div>
+        </div>
+      </div>
       {/* Premium Tab Toggle */}
       <div className="ttog" style={{ marginBottom: '14px' }}>
         <button className={`tbtn ${subView === 'chat' ? 'on' : ''}`} onClick={() => setSubView('chat')}>AI Guide</button>

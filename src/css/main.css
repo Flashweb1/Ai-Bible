@@ -144,6 +144,14 @@ body {
   transition: background 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
+@media (min-width: 768px) and (max-width: 1024px) {
+  #app {
+    max-width: 88vw;
+    margin: 12px auto 0;
+    min-height: calc(100vh - 12px);
+  }
+}
+
 @media (min-width: 768px) {
 #app {
   max-width: 760px;
@@ -155,15 +163,9 @@ body {
   transition: background 0.3s, box-shadow 0.3s;
 }
 
-@media (min-width: 768px) {
-  #app {
-    margin: 0 auto;
-    border-radius: 28px;
-    box-shadow: 0 0 60px var(--sh), 0 20px 60px var(--sh);
-  }
-  .cnt {
-    padding: 30px 24px 152px;
-  }
+.cnt {
+  padding: 30px 24px 152px;
+}
 }
 
 @media (max-width: 480px) {
@@ -177,7 +179,6 @@ body {
   .pray-hero {
     padding: 22px 16px !important;
   }
-}
 }
 
 /* ═══════════════════════════════════════ */
@@ -285,6 +286,12 @@ select option {
 @media (min-width: 768px) {
   .cnt {
     padding: 28px 0 142px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cnt {
+    padding: 20px 12px 126px;
   }
 }
 
@@ -555,4 +562,19 @@ input:checked + .slider:before {
   border: 2px solid var(--bdr2);
   flex-shrink: 0;
   transition: transform 0.2s;
+}
+
+:focus-visible {
+  outline: 2px solid var(--prime);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

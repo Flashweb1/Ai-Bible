@@ -9,6 +9,13 @@
   min-height: 400px;
 }
 
+@media (max-width: 480px) {
+  .aiwrap {
+    height: calc(100dvh - 160px);
+    min-height: 300px;
+  }
+}
+
 .aitools {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -256,4 +263,21 @@
   font-style: italic;
   letter-spacing: 0.3px;
   animation: fi 0.3s ease;
+}
+
+.ai-status-card {
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 12px 28px var(--sh2);
+}
+
+.ai-status-line {
+  font-family: var(--font-family-ui);
+  font-size: 13px;
+  color: var(--txt);
+  line-height: 1.6;
+  margin-top: 8px;
 }

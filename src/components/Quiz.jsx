@@ -8,11 +8,19 @@ export default function Quiz() {
     const [index, setIndex] = useState(0);
     const [knownCount, setKnownCount] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
-    const [deck, setDeck] = useState([...MEMORY_VERSES].sort(() => Math.random() - 0.5));
+    const [deck, setDeck] = useState(() => shuffleArray([...MEMORY_VERSES]));
     const [confetti, setConfetti] = useState([]);
 
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     const startQuiz = () => {
-        setDeck([...MEMORY_VERSES].sort(() => Math.random() - 0.5));
+        setDeck(shuffleArray([...MEMORY_VERSES]));
         setIndex(0);
         setKnownCount(0);
         setIsFlipped(false);

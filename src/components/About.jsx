@@ -24,6 +24,12 @@ export default function About({ user, setTab }) {
   const handleFeedbackSubmit = (e) => {
     e.preventDefault();
     if (!feedbackMsg.trim()) return;
+    console.log('Feedback saved locally:', { name: feedbackName, email: feedbackEmail, message: feedbackMsg });
+    try {
+      const existing = JSON.parse(localStorage.getItem('sc-feedback') || '[]');
+      existing.push({ name: feedbackName, email: feedbackEmail, message: feedbackMsg, date: new Date().toISOString() });
+      localStorage.setItem('sc-feedback', JSON.stringify(existing));
+    } catch {}
     setFeedbackSent(true);
     setFeedbackMsg('');
     setTimeout(() => setFeedbackSent(false), 5000);

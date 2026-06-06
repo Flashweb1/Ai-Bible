@@ -54,21 +54,23 @@ const providerClients = providers.map(provider => ({
     baseURL: provider.baseURL,
     apiKey: provider.apiKey,
     defaultHeaders: provider.defaultHeaders,
-    timeout: 8000, // Timeout after 8 seconds to prevent hanging
+    timeout: 30000, // Timeout after 30 seconds for AI model inference
   }),
 }));
 
 const activeProviderNames = providerClients.map(p => p.name).join(', ') || 'None';
 console.log(`AI Providers enabled: ${activeProviderNames}`);
 
+const allowedOrigins = (process.env.SITE_URL || 'http://localhost:5173,http://localhost:3001').split(',').map(s => s.trim());
 app.use(cors({
-  origin: true,
+  origin: allowedOrigins,
   methods: ['POST', 'OPTIONS'],
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 const aiCache = new Map();
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 const aiLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -184,14 +186,18 @@ app.post('/api/ai/ask', aiLimiter, async (req, res) => {
   const cacheKey = crypto.createHash('sha256').update(cacheString).digest('hex');
 
   if (aiCache.has(cacheKey)) {
-    console.log('Serving answer from AI Cache');
-    return res.json({ response: aiCache.get(cacheKey) });
+    const cached = aiCache.get(cacheKey);
+    if (Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log('Serving answer from AI Cache');
+      return res.json({ response: cached.data });
+    }
+    aiCache.delete(cacheKey);
   }
 
   try {
     const response = await getAIResponse(messages, sys);
 
-    aiCache.set(cacheKey, response);
+    aiCache.set(cacheKey, { data: response, timestamp: Date.now() });
     if (aiCache.size > 1000) aiCache.delete(aiCache.keys().next().value);
 
     res.json({ response });
@@ -211,11 +217,6 @@ app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
 
   if (!Array.isArray(messages) || messages.length === 0) {
     res.status(400).json({ error: "Messages must be a non-empty array" });
-    return;
-  }
-
-  if (!providerClients.length) {
-    res.status(500).json({ error: 'AI API key is not configured.' });
     return;
   }
 

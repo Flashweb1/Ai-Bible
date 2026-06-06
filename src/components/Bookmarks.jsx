@@ -7,7 +7,7 @@ import { usePageTitle } from '../hooks/usePageTitle.js';
 export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }) {
   usePageTitle('Bookmarks');
   const showToast = useToast();
-  const { bookmarks, deleteBookmark } = useAppContext();
+  const { bookmarks = [], deleteBookmark } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredBookmarks = bookmarks.filter(b => {
@@ -19,9 +19,13 @@ export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }
     );
   });
 
-  const handleCopy = (b) => {
-    navigator.clipboard.writeText(`"${b.text}" — ${b.bn} ${b.ch}:${b.vn}`);
-    showToast('Verse copied to clipboard!');
+  const handleCopy = async (b) => {
+    try {
+      await navigator.clipboard.writeText(`"${b.text}" — ${b.bn} ${b.ch}:${b.vn}`);
+      showToast('Verse copied to clipboard!');
+    } catch {
+      showToast('Could not copy - clipboard access denied');
+    }
   };
 
   const handleAskScholar = (b) => {

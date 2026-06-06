@@ -10,7 +10,7 @@ function generateId() {
 export default function Notes({ user, onLoginClick }) {
     usePageTitle('Notes');
     const showToast = useToast();
-    const { notes, setNotes } = useAppContext();
+    const { notes = [], setNotes } = useAppContext();
     const [editingNote, setEditingNote] = useState(null);
     const [title, setTitle] = useState('');
     const [passage, setPassage] = useState('');

@@ -175,17 +175,3 @@ export const DEFAULT_USER_CONFIG = {
   redLetter: true,
   autoScroll: false
 };
-
-// Ensure the initial theme is applied on load
-document.addEventListener('DOMContentLoaded', () => {
-  let userConfig = DEFAULT_USER_CONFIG;
-  try {
-    const raw = localStorage.getItem('userConfig');
-    if (raw) {
-      userConfig = JSON.parse(raw);
-    }
-  } catch (error) {
-    console.warn('Invalid userConfig in localStorage, falling back to defaults.', error);
-  }
-  document.documentElement.setAttribute('data-theme', userConfig.theme || DEFAULT_USER_CONFIG.theme);
-});

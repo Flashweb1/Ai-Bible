@@ -15,9 +15,13 @@ export default function Drawer({ isOpen, onClose, setTab, setSelectedBook, setCu
     }
     if (isOpen) {
       document.addEventListener('keydown', onKey);
+      document.body.style.overflow = 'hidden';
       setTimeout(() => drawerRef.current && drawerRef.current.focus(), 50);
     }
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -44,7 +48,7 @@ export default function Drawer({ isOpen, onClose, setTab, setSelectedBook, setCu
   return (
     <div>
       <div className="drw-ov open" onClick={onClose} />
-      <aside className="drw open" ref={drawerRef} tabIndex={-1} aria-modal="true" role="dialog">
+      <aside className="drw open" ref={drawerRef} tabIndex={-1} aria-modal="true" role="dialog" aria-label="Navigation menu">
         <div className="drw-hdr">
           <div className="drw-user">
             {user ? (
@@ -67,9 +71,12 @@ export default function Drawer({ isOpen, onClose, setTab, setSelectedBook, setCu
               </div>
             )}
           </div>
-          <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme" aria-label="Toggle theme">
-            {isDark ? '🌙' : '☀️'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button className="drw-close-btn theme-toggle-btn" onClick={onClose} title="Close menu" aria-label="Close navigation menu">✕</button>
+            <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme" aria-label="Toggle theme">
+              {isDark ? '🌙' : '☀️'}
+            </button>
+          </div>
         </div>
 
         <div className="drw-body">

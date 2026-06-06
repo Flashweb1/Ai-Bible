@@ -87,6 +87,7 @@
   .chbtn {
     padding: 10px 0;
     font-size: 12px;
+    min-height: 44px;
   }
 }
 
@@ -146,6 +147,27 @@
   text-transform: uppercase;
 }
 
+.chapter-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--gpale);
+  border: 1px solid var(--bdr2);
+  border-radius: 999px;
+  font-family: var(--font-family-ui);
+  font-size: 10px;
+  color: var(--prime);
+}
+
 .rtbar {
   display: flex;
   align-items: center;
@@ -156,6 +178,17 @@
   padding: 8px 14px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .rtbar {
+    gap: 8px;
+    padding: 10px;
+  }
+  .rtbar .tsel {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .tsel {
@@ -176,18 +209,26 @@
 .fsbtn {
   background: var(--bg2);
   border: 1px solid var(--bdr2);
-  border-radius: 8px;
-  width: 28px;
-  height: 28px;
+  border-radius: 10px;
   cursor: pointer;
   color: var(--txt);
   font-family: var(--font-family-ui);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   transition: all .2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+}
+
+@media (max-width: 480px) {
+  .fsbtn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .fsbtn:hover {

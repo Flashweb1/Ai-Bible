@@ -113,7 +113,7 @@ export default function App() {
 
   const renderTab = () => {
     switch (currentTab) {
-      case 'home': return <Home setTab={setCurrentTab} user={user} onLogout={handleLogout} onLoginClick={() => setShowAuthModal(true)} setSelectedBook={setSelectedBook} setCurrentChapter={setCurrentChapter} />;
+      case 'home': return <Home selectedBook={selectedBook} currentChapter={currentChapter} setTab={setCurrentTab} user={user} onLogout={handleLogout} onLoginClick={() => setShowAuthModal(true)} setSelectedBook={setSelectedBook} setCurrentChapter={setCurrentChapter} />;
       case 'read': return <Read selectedBook={selectedBook} setSelectedBook={setSelectedBook} currentChapter={currentChapter} setCurrentChapter={setCurrentChapter} setTab={setCurrentTab} />;
       case 'scholar': return <Scholar selectedBook={selectedBook} currentChapter={currentChapter} user={user} onLoginClick={() => setShowAuthModal(true)} />;
       case 'pray': return <Pray />;

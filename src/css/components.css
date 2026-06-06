@@ -68,6 +68,8 @@
   justify-content: center;
   box-shadow: 0 3px 10px var(--sh2);
   transition: transform .25s cubic-bezier(0.25, 0.8, 0.25, 1), background .25s, color .25s, border-color .25s, box-shadow .25s;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .hico:hover {
@@ -320,7 +322,9 @@
 }
 
 .skel-line {
-  composes: skel-block;
+  background: var(--bdr2);
+  border-radius: 12px;
+  animation: pl 1.5s ease-in-out infinite;
   height: 14px;
 }
 
@@ -779,13 +783,13 @@
   flex: 1;
 }
 
-/* Mobile */
+/* Mobile Drawer — partial overlay panel (not full-screen) */
 @media (max-width: 600px) {
   .drw {
-    width: 100vw;
-    max-width: 100vw;
-    border-radius: 0;
-    box-shadow: none;
+    width: 85vw;
+    max-width: 320px;
+    border-radius: 0 20px 20px 0;
+    box-shadow: 8px 0 35px rgba(0, 0, 0, 0.4);
   }
 
   .drw-ov {
@@ -819,6 +823,15 @@
   .drw-it-icon {
     font-size: 20px;
   }
+
+  .drw-close-btn {
+    display: flex;
+  }
+}
+
+/* Desktop drawer — hide close button */
+.drw-close-btn {
+  display: none;
 }
 
 /* Auth Prompt Banner */

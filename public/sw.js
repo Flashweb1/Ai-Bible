@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scripturai-shell-v1';
+const CACHE_NAME = 'scripturai-shell-v2';
 const APP_SHELL = [
   '/',
   '/index.html'
@@ -32,52 +32,54 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - Stale-while-revalidate / Network fallback
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // Do NOT intercept API calls or Firebase auth requests
-  // We let IndexedDB and normal network behavior handle these
-  if (
-    url.pathname.startsWith('/api') || 
-    url.hostname.includes('getbible.net') || 
-    url.hostname.includes('bible-api.com') ||
-    url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('firebase') ||
-    url.pathname.startsWith('/api') // Exclude all /api calls from caching
-  ) {
-    return; 
+  // Skip non-GET requests and WebSocket upgrades (Vite HMR, etc.)
+  if (event.request.method !== 'GET' || event.request.mode === 'websocket' || event.request.mode === 'navigate' && event.request.headers.get('Upgrade')) {
+    return;
   }
 
-  // Dynamic Cache-First strategy for static assets (JS, CSS, Images, Fonts)
+  const url = new URL(event.request.url);
+
+  // Do NOT intercept API calls, Firebase auth, or external Bible APIs
+  if (
+    url.pathname.startsWith('/api') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('getbible.net') ||
+    url.hostname.includes('bible-api.com')
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // For local Bible files, serve from cache immediately and don't revalidate
-        if (url.pathname.startsWith('/bibles/')) {
-          return cachedResponse;
+        // Stale-while-revalidate for non-Bible assets
+        if (!url.pathname.startsWith('/bibles/')) {
+          fetch(event.request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+            }
+          }).catch(() => {});
         }
-        // For other assets, fetch from network in background to update cache for next time (Stale-While-Revalidate)
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
-          }
-        }).catch(() => {});
         return cachedResponse;
       }
-      
-      // If not in cache, fetch from network and cache it dynamically
+
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            if (event.request.url.startsWith('http')) {
+              cache.put(event.request, responseToCache);
+            }
+          });
         }
-        
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          if (event.request.url.startsWith('http') || url.pathname.startsWith('/bibles/')) { // Cache local Bible files
-            cache.put(event.request, responseToCache);
-          }
-        });
         return networkResponse;
-      }).catch(() => event.request.mode === 'navigate' ? caches.match('/index.html') : null);
+      }).catch(() => {
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+        return new Response('', { status: 503 });
+      });
     })
   );
 });

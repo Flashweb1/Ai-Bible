@@ -15,8 +15,15 @@ import { ToastProvider } from './components/Toast.jsx'
 
 // ─── Register Service Worker for offline PWA support ───────────────────────
 if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    for (const reg of regs) {
+      if (reg.active && reg.active.scriptURL.includes('sw.js')) {
+        reg.unregister();
+      }
+    }
+  });
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/sw.js?v=2')
       .then(reg => console.log('[SW] Registered, scope:', reg.scope))
       .catch(err => console.warn('[SW] Registration failed:', err));
   });

@@ -16,7 +16,7 @@ export default function InstallPrompt() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
+    await deferredPrompt.prompt();
     const result = await deferredPrompt.userChoice;
     if (result.outcome === 'accepted') setShow(false);
     setDeferredPrompt(null);

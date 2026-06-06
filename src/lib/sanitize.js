@@ -20,7 +20,7 @@ const htmlEntityMap = {
  */
 export function escapeHtml(text) {
   if (!text || typeof text !== 'string') return '';
-  return text.replace(/[&<>"'\/]/g, char => htmlEntityMap[char]);
+  return text.replace(/[&<>"'/]/g, char => htmlEntityMap[char]);
 }
 
 /**
@@ -36,14 +36,13 @@ export function renderSafeMarkdown(text) {
   let safe = escapeHtml(text);
   
   // Step 2: Apply safe formatting AFTER escaping
-  // This ensures user input can't break out of formatting
   safe = safe
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')          // **bold**
-    .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')   // > blockquote
-    .replace(/\n\n/g, '</p><p>')                                // paragraph breaks
-    .replace(/\n/g, '<br>');                                    // line breaks
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
   
-  // Wrap in paragraph tags if needed
   if (safe && !safe.startsWith('<p>') && !safe.startsWith('<blockquote>')) {
     safe = '<p>' + safe + '</p>';
   }
@@ -92,9 +91,19 @@ export function sanitizeAIResponse(response) {
   // Remove script tags completely
   let sanitized = response.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   
-  // Remove event handlers
-  sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
+  // Remove event handlers (quoted, backtick, and unquoted variants)
+  sanitized = sanitized.replace(/on\w+\s*=\s*["'`][^"'`]*["'`]/gi, '');
   sanitized = sanitized.replace(/on\w+\s*=\s*[^\s>]*/gi, '');
+  
+  // Remove dangerous tags and javascript: URLs
+  sanitized = sanitized.replace(/<iframe\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<\/iframe>/gi, '');
+  sanitized = sanitized.replace(/<object\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<\/object>/gi, '');
+  sanitized = sanitized.replace(/<embed\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<\/embed>/gi, '');
+  sanitized = sanitized.replace(/<svg\s+onload\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/href\s*=\s*(?:["'`])?\s*javascript\s*:/gi, '');
   
   return sanitized;
 }
