@@ -245,9 +245,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', engine: providerClients.map(p => p.name).join(', ') || 'None' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Scripturai Backend Running on port ${PORT}.`);
-  console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
-});
+// Only start the server when run directly (not as a serverless function)
+const isMainModule = process.argv[1]?.replace(/\\/g, '/')?.includes('server.js');
+if (isMainModule) {
+  app.listen(PORT, () => {
+    console.log(`Scripturai Backend Running on port ${PORT}.`);
+    console.log(`AI Providers: ${providerClients.map(p => p.name).join(', ') || 'None'}`);
+  });
+}
 
 export default app;
