@@ -63,15 +63,31 @@ If you want the backend on a separate Vercel instance:
 
 ## Step 3: Configure Environment Variables
 
-In Vercel project settings, add these variables:
+In Vercel project settings → Environment Variables, add these exact values:
 
-### Required for Backend
-- `GEMINI_API_KEY` or `OPENROUTER_API_KEY` — Get from [Google AI Studio](https://aistudio.google.com) or [OpenRouter](https://openrouter.ai)
-- `ALLOWED_ORIGINS` — Your Vercel domain + localhost for testing
-- `SITE_URL` — Your Vercel domain
+### Frontend Variables
 
-### Required for Frontend  
-- `VITE_API_URL` — Must match your backend URL (default: relative path works)
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://your-deployment.vercel.app/api` (replace with your Vercel domain) |
+| `VITE_FIREBASE_API_KEY` | `AIzaSyBI1ewkDF1DlHr6aRr0BL9GL1SCMcELQhE` |
+| `VITE_FIREBASE_AUTH_DOMAIN` | `ai-bible-2faa5.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | `ai-bible-2faa5` |
+| `VITE_FIREBASE_STORAGE_BUCKET` | `ai-bible-2faa5.firebasestorage.app` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | `683396759678` |
+| `VITE_FIREBASE_APP_ID` | `1:683396759678:web:1b573dbbd183d17282982f` |
+
+### Backend Variables
+
+| Variable | Value |
+|----------|-------|
+| `PORT` | `3001` |
+| `NODE_ENV` | `production` |
+| `SITE_URL` | `https://your-deployment.vercel.app` (replace with your Vercel domain) |
+| `GEMINI_API_KEY` | Copy from your local `backend/.env` file |
+| `OPENROUTER_API_KEY` | Copy from your local `backend/.env` file |
+
+> **⚠️ Tip:** Copy these values directly from your local `backend/.env` and `.env` files into the Vercel dashboard. **Never commit API keys to a public repository.**
 
 ## Step 4: Test the Deployment
 
