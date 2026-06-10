@@ -61,10 +61,41 @@ const providerClients = providers.map(provider => ({
 const activeProviderNames = providerClients.map(p => p.name).join(', ') || 'None';
 console.log(`AI Providers enabled: ${activeProviderNames}`);
 
-const allowedOrigins = (process.env.SITE_URL || 'http://localhost:5173,http://localhost:3001').split(',').map(s => s.trim());
+function splitOrigins(value) {
+  return String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+const allowedOrigins = [
+  ...new Set([
+    ...splitOrigins(process.env.SITE_URL),
+    ...splitOrigins(process.env.ALLOWED_ORIGINS),
+    ...splitOrigins(process.env.VITE_API_URL),
+    ...splitOrigins(process.env.FRONTEND_URL),
+    'http://localhost:5173',
+    'http://localhost:3001',
+    'https://localhost:5173',
+    'https://localhost:3001',
+  ]),
+];
+
 app.use(cors({
-  origin: allowedOrigins,
-  methods: ['POST', 'OPTIONS'],
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.includes(origin)
+      || /(?:\.netlify\.app|\.vercel\.app)$/i.test(origin)
+      || /^https?:\/\/localhost(?::\d+)?$/i.test(origin);
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origin not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true,
 }));
 app.use(express.json({ limit: '1mb' }));
