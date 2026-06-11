@@ -138,6 +138,24 @@
   color: var(--prime);
 }
 
+.rbook-link {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--prime);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: opacity 0.2s;
+}
+
+.rbook-link:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
 .rch {
   font-family: 'Cinzel', serif;
   font-size: 11px;

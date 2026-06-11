@@ -4,17 +4,15 @@ const APP_SHELL = [
   '/index.html'
 ];
 
-// Install event - cache the core app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(APP_SHELL);
     })
   );
-  self.skipWaiting(); // Activate worker immediately
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -27,19 +25,16 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim(); // Take control of all pages immediately
+  self.clients.claim();
 });
 
-// Fetch event - Stale-while-revalidate / Network fallback
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests and WebSocket upgrades (Vite HMR, etc.)
   if (event.request.method !== 'GET' || event.request.mode === 'websocket' || event.request.mode === 'navigate' && event.request.headers.get('Upgrade')) {
     return;
   }
 
   const url = new URL(event.request.url);
 
-  // Do NOT intercept API calls, Firebase auth, or external Bible APIs
   if (
     url.pathname.startsWith('/api') ||
     url.hostname.includes('googleapis.com') ||
@@ -53,7 +48,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Stale-while-revalidate for non-Bible assets
         if (!url.pathname.startsWith('/bibles/')) {
           fetch(event.request).then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
@@ -80,6 +74,42 @@ self.addEventListener('fetch', (event) => {
         }
         return new Response('', { status: 503 });
       });
+    })
+  );
+});
+
+self.addEventListener('push', (event) => {
+  let data = { title: 'Scripturai', body: '', icon: '/icon-192.png' };
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
+    }
+  } catch (e) {
+    data.body = event.data?.text() || '';
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon || '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      data: data.data || {},
+      tag: data.tag || 'daily-verse',
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      if (windowClients.length > 0) {
+        windowClients[0].focus();
+      } else {
+        clients.openWindow('/');
+      }
     })
   );
 });

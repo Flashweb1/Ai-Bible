@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getChapter } from '../js/api.js';
 import { BOOKS, TRANSLATIONS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
+import { loadPreferences, savePreferences } from '../js/preferences.js';
 import VerseSheetModal from './VerseSheetModal.jsx';
 import { ChapterSkeleton } from './Skeleton.jsx';
 import { usePageTitle } from '../hooks/usePageTitle.js';
@@ -16,9 +17,17 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
   usePageTitle(selectedBook ? `${selectedBook.n} ${currentChapter}` : 'Read');
   // State mapping from global scripturai.html variables
   const [step, setStep] = useState(selectedBook ? 'verses' : 'book'); // 'book', 'chapter', 'verses'
-  const [testament, setTestament] = useState('OT');
+  const [testament, setTestament] = useState(() => {
+    const saved = localStorage.getItem('sc-pref-testament');
+    localStorage.removeItem('sc-pref-testament');
+    return saved === 'NT' ? 'NT' : 'OT';
+  });
   // book and chapter are now props
-  const [translation, setTranslation] = useState('kjv');
+  const [translation, setTranslation] = useState(() => {
+    const prefs = loadPreferences();
+    const saved = prefs?.defaultTranslation;
+    return saved && TRANSLATIONS[saved] ? saved : 'kjv';
+  });
   const [fontSize, setFontSize] = useState(18);
 
   // Data loading states
@@ -63,6 +72,22 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
     return () => {
       window.speechSynthesis.cancel();
     };
+  }, []);
+
+  // Auto-save selected translation as preferred default
+  useEffect(() => {
+    const prefs = loadPreferences() || {};
+    savePreferences({ ...prefs, defaultTranslation: translation });
+  }, [translation]);
+
+  // Ensure current translation is still in the visible list
+  useEffect(() => {
+    const prefs = loadPreferences();
+    const visible = prefs?.visibleTranslations;
+    if (visible && !visible.includes(translation)) {
+      const first = visible.find(k => TRANSLATIONS[k]) || 'kjv';
+      setTranslation(first);
+    }
   }, []);
 
   // Cancel speech if we switch chapter, book, or translation
@@ -257,7 +282,7 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
       <>
         <button className="back-btn" onClick={() => setStep('book')}><ArrowLeftIcon /> All Books</button>
         <div className="rhdr">
-          <div className="rbook">{selectedBook.n}</div>
+        <button className="rbook-link" onClick={() => { setStep('book'); handleStopSpeech(); }}>{selectedBook.n}</button>
           <div className="rch">Select a Chapter</div>
         </div>
         <div className="chgrid">
@@ -281,12 +306,15 @@ export default function Read({ setTab, selectedBook, setSelectedBook, currentCha
       </div>
       <div className="chapter-meta">
         {isOffline && <span className="status-pill">Offline mode</span>}
-        <span className="status-pill">Source: {chapterSource || 'unknown'}</span>
       </div>
       
       <div className="rtbar">
         <select className="tsel" value={translation} onChange={(e) => setTranslation(e.target.value)}>
-          {Object.entries(TRANSLATIONS).map(([k, v]) => (
+          {Object.entries(TRANSLATIONS).filter(([k]) => {
+            const prefs = loadPreferences();
+            const visible = prefs?.visibleTranslations;
+            return !visible || visible.includes(k);
+          }).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>

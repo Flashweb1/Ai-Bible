@@ -12,8 +12,21 @@ import App from './App.jsx'
 import { AppProvider } from './AppContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ToastProvider } from './components/Toast.jsx'
+import { requestNotificationPermission, getFCMToken, registerTokenOnBackend } from './lib/notifications.js'
 
 // ─── Register Service Worker for offline PWA support ───────────────────────
+async function setupNotifications() {
+  try {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      const token = await getFCMToken();
+      if (token) {
+        await registerTokenOnBackend(token);
+      }
+    }
+  } catch {}
+}
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => {
     for (const reg of regs) {
@@ -24,7 +37,10 @@ if ('serviceWorker' in navigator) {
   });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js?v=2')
-      .then(reg => console.log('[SW] Registered, scope:', reg.scope))
+      .then(reg => {
+        console.log('[SW] Registered, scope:', reg.scope);
+        setupNotifications();
+      })
       .catch(err => console.warn('[SW] Registration failed:', err));
   });
 }

@@ -99,15 +99,12 @@ export const TRANSLATIONS = {
   nkjv: "NKJV (New King James)",
   nlt: "NLT (New Living Translation)",
   nasb: "NASB (New American Standard)",
-  nrsv: "NRSV (New Revised Standard)",
-  bsb: "BSB (Berean Standard)",
   net: "NET (New English)",
   amp: "AMP (Amplified)",
   msg: "MSG (The Message)",
   web: "WEB (World English)",
   asv: "ASV (American Standard)",
   ylt: "YLT (Young's Literal)",
-  bbe: "BBE (Basic English)",
 };
 
 export const HIGHLIGHT_MAP = {

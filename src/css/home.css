@@ -171,6 +171,50 @@
   margin-top: 24px;
 }
 
+.testament-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tbtn-ot,
+.tbtn-nt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border-radius: 16px;
+  border: 1.5px solid var(--bdr2);
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 12px var(--sh2);
+}
+
+.tbtn-ot {
+  background: linear-gradient(135deg, #5B3A1A, #8B6914);
+  color: #FFFDF9;
+}
+
+.tbtn-ot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(91, 58, 26, 0.4);
+}
+
+.tbtn-nt {
+  background: linear-gradient(135deg, #8B1A1A, #C53A3A);
+  color: #FFFDF9;
+}
+
+.tbtn-nt:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 26, 26, 0.4);
+}
+
 .onboard-card,
 .continue-card {
   background: var(--surf);

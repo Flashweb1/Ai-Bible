@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadPreferences, savePreferences, applyPreferences } from '../js/preferences.js';
+import { TRANSLATIONS } from '../js/data.js';
 import { usePageTitle } from '../hooks/usePageTitle.js';
 
 const FONT_FAMILIES = [
@@ -59,7 +60,19 @@ function hslToHex(h, s, l) {
 
 export default function Settings({ isDark, setIsDark, setTab }) {
   usePageTitle('Settings');
-  const [prefs, setPrefs] = useState(() => loadPreferences() || { theme: isDark ? 'dark' : 'light', fontFamily: FONT_FAMILIES[0].value, fontScale: 1, accent: 'hsl(348 70% 45%)', accentCompl: 'hsl(168 70% 45%)' });
+  const allTranslations = Object.keys(TRANSLATIONS);
+  const [prefs, setPrefs] = useState(() => {
+    const saved = loadPreferences();
+    return saved || {
+      theme: isDark ? 'dark' : 'light',
+      fontFamily: FONT_FAMILIES[0].value,
+      fontScale: 1,
+      accent: 'hsl(348 70% 45%)',
+      accentCompl: 'hsl(168 70% 45%)',
+      defaultTranslation: 'kjv',
+      visibleTranslations: allTranslations
+    };
+  });
 
   useEffect(() => {
     applyPreferences(prefs);
@@ -106,6 +119,24 @@ export default function Settings({ isDark, setIsDark, setTab }) {
     setPrefs(next);
     savePreferences(next);
     applyPreferences(next);
+  }
+
+  function setDefaultTranslation(translation) {
+    const next = { ...prefs, defaultTranslation: translation };
+    setPrefs(next);
+    savePreferences(next);
+    applyPreferences(next);
+  }
+
+  function toggleVisibleTranslation(key) {
+    const current = prefs.visibleTranslations || allTranslations;
+    const next = current.includes(key)
+      ? current.filter(k => k !== key)
+      : [...current, key];
+    const newPrefs = { ...prefs, visibleTranslations: next };
+    setPrefs(newPrefs);
+    savePreferences(newPrefs);
+    applyPreferences(newPrefs);
   }
 
   return (
@@ -156,6 +187,37 @@ export default function Settings({ isDark, setIsDark, setTab }) {
           <button className={`opt-btn ${prefs.fontScale === 1 ? 'active' : ''}`} onClick={() => setFontScale(1)}>A</button>
           <button className={`opt-btn ${prefs.fontScale === 1.2 ? 'active' : ''}`} onClick={() => setFontScale(1.2)}>A+</button>
           <button className={`opt-btn ${prefs.fontScale === 1.4 ? 'active' : ''}`} onClick={() => setFontScale(1.4)}>A++</button>
+        </div>
+      </div>
+
+      <div className="setting-group">
+        <div className="section-title">Default Translation</div>
+        <p>Choose which translation opens when you start reading.</p>
+        <div className="opt-group">
+          {Object.entries(TRANSLATIONS).map(([k, v]) => (
+            <button
+              key={k}
+              className={`opt-btn ${prefs.defaultTranslation === k ? 'active' : ''}`}
+              onClick={() => setDefaultTranslation(k)}
+            >{v}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="setting-group">
+        <div className="section-title">Visible Translations</div>
+        <p>Uncheck translations you don't want in the reader dropdown.</p>
+        <div className="opt-group trans-grid">
+          {Object.entries(TRANSLATIONS).map(([k, v]) => {
+            const visible = prefs.visibleTranslations?.includes(k) ?? true;
+            return (
+              <button
+                key={k}
+                className={`opt-btn ${visible ? 'active' : ''}`}
+                onClick={() => toggleVisibleTranslation(k)}
+              >{visible ? '✓ ' : '✕ '}{v}</button>
+            );
+          })}
         </div>
       </div>
 

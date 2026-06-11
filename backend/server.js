@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import OpenAI from 'openai';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto';
+import cron from 'node-cron';
+import { initFirebaseAdmin, registerToken, unregisterToken, sendDailyVerse } from './notifications.js';
 
 dotenv.config();
 
@@ -60,6 +62,9 @@ const providerClients = providers.map(provider => ({
 
 const activeProviderNames = providerClients.map(p => p.name).join(', ') || 'None';
 console.log(`AI Providers enabled: ${activeProviderNames}`);
+
+// Initialize Firebase Admin for push notifications (optional)
+const fbInit = initFirebaseAdmin();
 
 function splitOrigins(value) {
   return String(value || '')
@@ -275,6 +280,29 @@ app.post('/api/ai/ask/stream', aiLimiter, async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', engine: providerClients.map(p => p.name).join(', ') || 'None' });
 });
+
+app.post('/api/notifications/register', async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token required' });
+
+  const ok = await registerToken(token);
+  res.status(ok ? 200 : 500).json({ ok });
+});
+
+app.post('/api/notifications/unregister', async (req, res) => {
+  const { token } = req.body;
+  if (token) await unregisterToken(token);
+  res.json({ ok: true });
+});
+
+// Schedule daily verse push at 8:00 AM every day
+if (fbInit) {
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Cron] Sending daily verse...');
+    sendDailyVerse();
+  });
+  console.log('[Cron] Daily verse notification scheduled for 8:00 AM.');
+}
 
 // Only start the server when run directly (not as a serverless function)
 const isMainModule = process.argv[1]?.replace(/\\/g, '/')?.includes('server.js');

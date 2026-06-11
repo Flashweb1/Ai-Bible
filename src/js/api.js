@@ -4,20 +4,17 @@ const cache = new Map();
 
 const HAO_TID = {
   kjv: 'KJV',
-  niv: 'NIV',
+  niv: 'NIV2011',
   esv: 'ESV',
   nkjv: 'NKJV',
   nlt: 'NLT',
   nasb: 'NASB',
-  nrsv: 'NRSV',
-  bsb: 'BSB',
   net: 'NET',
   amp: 'AMP',
   msg: 'MSG',
   web: 'WEB',
   asv: 'ASV',
-  ylt: 'YLT',
-  bbe: 'BBE'
+  ylt: 'YLT'
 };
 
 function getLocal(key) {
@@ -27,7 +24,7 @@ function setLocal(key, data) {
   try { localStorage.setItem('sc-v:' + key, JSON.stringify(data)) } catch {}
 }
 
-async function fetchJSON(url, ms = 6000) {
+async function fetchJSON(url, ms = 3000) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), ms);
   try {
@@ -76,26 +73,7 @@ export async function getChapter(bookNum, chapter, translation) {
       .then(verses => { if (!Array.isArray(verses) || !verses.length) throw new Error("Empty local verses"); return { verses, source: 'local file' }; })
   );
 
-  if (tid) {
-    race.push(
-      fetchJSON(`https://bible.helloao.org/api/${tid}/${ab3}/${chapter}.json`)
-        .then(d => {
-          const verses = (d?.chapter?.content || []).filter(v => v.type === 'verse').map(v => ({
-            verse: v.number,
-            text: v.content
-              .map(c => typeof c === 'string' ? c : (c.text || ''))
-              .join('')
-              .replace(/<[^>]*>?/gm, '')
-              .replace(/\b[GH]\d{1,4}\b/g, '')
-              .trim()
-          }));
-          if (!verses.length) throw new Error("Empty verses");
-          return verses;
-        })
-    );
-  }
-
-  // Add Bolls Life API - Excellent for modern versions like NIV, ESV, NLT, NRSV
+  // Bolls Life API - Best source for modern translations
   if (tid) {
     race.push(
       fetchJSON(`https://bolls.life/get-text/${tid}/${book.num}/${chapter}/`)
@@ -104,9 +82,15 @@ export async function getChapter(bookNum, chapter, translation) {
           return d.map(v => ({
             verse: v.verse,
             text: v.text
-              .replace(/<[^>]*>?/gm, '')
-              .replace(/\b[GH]\d{1,4}\b/g, '')
-              .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '') // Strip Margin Notes
+              .replace(/<[^>]*>?/gm, ' ')
+              .replace(/[GH]\d{1,4}|\b\d{2,5}\b/g, '')
+              .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '')
+              .replace(/\s{2,}/g, ' ')
+              .replace(/\s+([.,;:!?)])/g, '$1')
+              .replace(/\(\s+/g, '(')
+              .replace(/\s+\)/g, ')')
+              .replace(/\[\s+/g, '[')
+              .replace(/\s+\]/g, ']')
               .trim()
           }));
         })

@@ -1,9 +1,7 @@
 import React from 'react';
-import { DAILY, QUICK_BOOKS, MEMORY_VERSES } from '../js/data.js';
+import { DAILY, QUICK_BOOKS, MEMORY_VERSES, TRANSLATIONS, BOOKS } from '../js/data.js';
 import { useAppContext } from '../AppContext.jsx';
 import { usePageTitle } from '../hooks/usePageTitle.js';
-
-import { BOOKS } from '../js/data.js';
 
 export default function Home({ selectedBook, currentChapter, setTab, user, onLogout, onLoginClick, setSelectedBook, setCurrentChapter }) {
   usePageTitle('Home');
@@ -52,6 +50,15 @@ export default function Home({ selectedBook, currentChapter, setTab, user, onLog
           <button className="hbtn" type="button" onClick={() => { localStorage.setItem('sc-scholar-query', `Explain the significance of ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Explain</button>
           <button className="hbtn" type="button" onClick={() => { localStorage.setItem('sc-scholar-query', `Write a heartfelt prayer based on ${verse.ref}: "${verse.text}"`); setTab('scholar'); }}>Pray It</button>
         </div>
+      </div>
+
+      <div className="testament-row">
+        <button className="tbtn-ot" onClick={() => { localStorage.setItem('sc-pref-testament', 'OT'); if (setSelectedBook) setSelectedBook(null); setTab('read'); }}>
+          📜 Old Testament
+        </button>
+        <button className="tbtn-nt" onClick={() => { localStorage.setItem('sc-pref-testament', 'NT'); if (setSelectedBook) setSelectedBook(null); setTab('read'); }}>
+          ✝ New Testament
+        </button>
       </div>
 
       <div className="onboard-card">
@@ -110,7 +117,7 @@ export default function Home({ selectedBook, currentChapter, setTab, user, onLog
         <span className="feat-ico">📖</span>
         <div>
           <div className="feat-tit">Read Scripture</div>
-          <div className="feat-sub">66 books · 4 translations · audio · highlights</div>
+           <div className="feat-sub">66 books · {Object.keys(TRANSLATIONS).length} translations · audio · highlights</div>
         </div>
       </button>
       <button className="feat" type="button" onClick={() => setTab('scholar')} aria-label="Open the Scholar AI">
