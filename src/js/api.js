@@ -17,6 +17,21 @@ const HAO_TID = {
   ylt: 'YLT'
 };
 
+function cleanText(text) {
+  return text
+    .replace(/<S>\d+<\/S>/g, '')
+    .replace(/<[^>]*>?/gm, ' ')
+    .replace(/[GH]\d{1,4}|\b\d{1,5}\b/g, '')
+    .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([.,;:!?)])/g, '$1')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/\[\s+/g, '[')
+    .replace(/\s+\]/g, ']')
+    .trim();
+}
+
 function getLocal(key) {
   try { const v = localStorage.getItem('sc-v:' + key); return v ? JSON.parse(v) : null } catch { return null }
 }
@@ -81,17 +96,7 @@ export async function getChapter(bookNum, chapter, translation) {
           if (!Array.isArray(d) || !d.length) throw new Error("Invalid Bolls response");
           return d.map(v => ({
             verse: v.verse,
-            text: v.text
-              .replace(/<[^>]*>?/gm, ' ')
-              .replace(/[GH]\d{1,4}|\b\d{2,5}\b/g, '')
-              .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '')
-              .replace(/\s{2,}/g, ' ')
-              .replace(/\s+([.,;:!?)])/g, '$1')
-              .replace(/\(\s+/g, '(')
-              .replace(/\s+\)/g, ')')
-              .replace(/\[\s+/g, '[')
-              .replace(/\s+\]/g, ']')
-              .trim()
+            text: cleanText(v.text)
           }));
         })
     );
@@ -100,7 +105,7 @@ export async function getChapter(bookNum, chapter, translation) {
   race.push(
     fetchJSON(`https://bible-api.com/${book.ab.replace(/\+/g, ' ')}+${chapter}?translation=${translation}`)
       .then(d => {
-        const verses = (d?.verses || []).map(v => ({ verse: v.verse, text: v.text.trim() }));
+        const verses = (d?.verses || []).map(v => ({ verse: v.verse, text: cleanText(v.text) }));
         if (!verses.length) throw new Error("Empty verses");
         return { verses, source: 'Bible API' };
       })
@@ -109,7 +114,7 @@ export async function getChapter(bookNum, chapter, translation) {
   race.push(
     fetchJSON(`https://getbible.net/v2/${translation}/${book.num}/${chapter}.json`)
       .then(d => {
-        const verses = Object.values(d?.verses || {}).map(v => ({ verse: v.verse, text: v.text.trim() }));
+        const verses = Object.values(d?.verses || {}).map(v => ({ verse: v.verse, text: cleanText(v.text) }));
         if (!verses.length) throw new Error("Empty verses");
         return { verses, source: 'GetBible' };
       })

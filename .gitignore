@@ -19,3 +19,5 @@ yarn-error.log*
 src/Bible-xml/
 
 nul
+# Kimi project memory
+.kimi-memory/
