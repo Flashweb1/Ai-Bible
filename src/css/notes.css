@@ -1,42 +1,102 @@
-/* ═══════════════════════════════════════ */
-/* NOTES & JOURNALING */
-/* ═══════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   NOTES & JOURNALING
+   ════════════════════════════════════════════════════════════ */
 
+/* ── NOTE LIST ───────────────────────────────────────────────── */
+
+.n-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.n-tag-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.n-group { margin-bottom: 20px; }
+
+.n-group-label {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+/* New note button */
+.newnbtn {
+  width: 100%;
+  background: var(--surf);
+  border: 1.5px dashed var(--bdr2);
+  border-radius: var(--r-lg);
+  padding: 13px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  transition:
+    border-color  var(--dur-fast) var(--ease),
+    color         var(--dur-fast) var(--ease),
+    background    var(--dur-fast) var(--ease);
+}
+
+.newnbtn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-wash);
+}
+
+/* Note cards */
 .ncard {
   background: var(--surf);
   border: 1px solid var(--bdr2);
-  border-radius: 18px;
-  padding: 16px 20px;
+  border-left: 2px solid var(--accent);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
   cursor: pointer;
-  transition: all .25s cubic-bezier(0.25, 0.8, 0.25, 1);
-  margin-bottom: 12px;
-  box-shadow: 0 4px 12px var(--sh2);
+  margin-bottom: 10px;
   position: relative;
-  overflow: hidden;
-}
-
-.ncard::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--prime);
+  transition:
+    border-color  var(--dur-fast) var(--ease),
+    background    var(--dur-fast) var(--ease),
+    box-shadow    var(--dur-fast) var(--ease);
 }
 
 .ncard:hover {
-  background: var(--gpale);
-  border-color: var(--gold);
-  transform: translateX(4px);
-  box-shadow: 0 8px 18px var(--sh2);
+  background: var(--accent-pale);
+  border-color: var(--bdr);
+  box-shadow: 0 3px 14px var(--sh-sm);
+}
+
+.ncard-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .ntit {
-  font-family: 'Playfair Display', serif;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--prime);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
   margin-bottom: 4px;
 }
 
@@ -45,172 +105,153 @@
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .npass {
-  font-family: var(--font-family-ui);
+  font-family: var(--font-ui);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--gold);
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .nprev {
-  font-size: 14px;
+  font-family: var(--font-serif);
+  font-size: 13px;
   color: var(--muted);
+  font-style: italic;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .ndate {
-  font-family: var(--font-family-ui);
-  font-size: 11px;
-  font-weight: 500;
+  font-family: var(--font-ui);
+  font-size: 10px;
   color: var(--muted);
   margin-top: 4px;
 }
 
 .ntag {
-  padding: 3px 8px;
-  border-radius: 8px;
-  font-family: var(--font-family-ui);
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 1px 3px var(--sh2);
+  letter-spacing: 0.06em;
 }
 
-.newnbtn {
-  width: 100%;
-  background: var(--surf);
-  border: 2px dashed var(--bdr2);
-  border-radius: 16px;
-  padding: 14px;
+.npin-btn {
+  background: none;
+  border: none;
   cursor: pointer;
-  font-family: var(--font-family-ui);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all .25s ease;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 16px;
+  color: var(--gold);
+  padding: 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: opacity var(--dur-fast) var(--ease);
 }
 
-.newnbtn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: var(--gpale);
-  transform: translateY(-1px);
-}
+.npin-btn:hover { opacity: 0.7; }
+
+/* ── NOTE EDITOR ────────────────────────────────────────────── */
 
 .nedwrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .ned-t {
-  background: var(--surf);
-  border: 1px solid var(--bdr2);
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-family: 'Playfair Display', serif;
-  font-weight: 600;
-  font-size: 20px;
-  color: var(--prime);
-  width: 100%;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.ned-t:focus {
-  border-color: var(--gold);
-}
-
-.ned-p {
-  background: var(--surf);
-  border: 1px solid var(--bdr2);
-  border-radius: 12px;
-  padding: 8px 16px;
-  font-family: var(--font-family-ui);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bdr2);
+  border-radius: 0;
+  padding: 8px 0;
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 22px;
   color: var(--txt);
   width: 100%;
   outline: none;
-  text-transform: uppercase;
-  transition: border-color 0.2s;
+  transition: border-color var(--dur-fast) var(--ease);
 }
 
-.ned-p:focus {
-  border-color: var(--gold);
+.ned-t:focus { border-color: var(--gold); }
+
+.ned-p {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  color: var(--gold);
+  width: 100%;
+  outline: none;
+  text-transform: uppercase;
 }
 
 .ned-b {
   background: var(--surf);
   border: 1px solid var(--bdr2);
-  border-radius: 16px;
+  border-radius: var(--r-md);
   padding: 16px;
-  font-family: var(--font-family-base), Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 17px;
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--txt);
   width: 100%;
-  min-height: 250px;
+  min-height: 240px;
   outline: none;
   resize: none;
-  box-shadow: inset 0 2px 4px var(--sh2);
-  transition: border-color 0.2s;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow   var(--dur-fast) var(--ease);
 }
 
 .ned-b:focus {
   border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-wash);
 }
 
+/* Tags */
 .tagsrow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .tagbtn {
-  border: 1px solid var(--bdr2);
-  border-radius: 999px;
+  border: 1px solid var(--bdr-ui);
+  border-radius: var(--r-sm);
   padding: 6px 14px;
   cursor: pointer;
-  font-family: var(--font-family-ui);
+  font-family: var(--font-ui);
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   background: var(--surf);
   color: var(--muted);
-  transition: all .25s ease;
   text-transform: uppercase;
-  box-shadow: 0 2px 5px var(--sh2);
+  transition:
+    background    var(--dur-fast) var(--ease),
+    border-color  var(--dur-fast) var(--ease),
+    color         var(--dur-fast) var(--ease);
 }
 
-.tagbtn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: var(--bg2);
-  transform: translateY(-1px);
-}
+.tagbtn:hover { border-color: var(--gold); color: var(--gold); }
 
 .tagbtn.on {
-  background: var(--prime);
-  color: var(--bg2);
-  border-color: var(--prime);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  background: var(--accent);
+  color: var(--btn-txt);
+  border-color: var(--accent);
 }
 
 .nedacts {

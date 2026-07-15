@@ -1,53 +1,57 @@
-/* ═══════════════════════════════════════ */
-/* QUIZ & FLASHCARDS */
-/* ═══════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   QUIZ & FLASHCARDS
+   ════════════════════════════════════════════════════════════ */
+
+/* ── SCORE HERO ─────────────────────────────────────────────── */
 
 .qhero {
   text-align: center;
-  padding: 30px 20px 24px;
-  background: var(--grad);
-  border-radius: 24px;
-  margin-bottom: 22px;
-  box-shadow: 0 10px 30px rgba(74, 0, 0, 0.22);
+  padding: 28px 24px 24px;
+  background: var(--accent);
+  border-radius: var(--r-2xl);
+  margin-bottom: 20px;
+  box-shadow: 0 6px 24px var(--sh);
 }
 
 .qscore {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 42px;
-  color: var(--glt);
+  font-family: var(--font-ui);
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--btn-txt);
   line-height: 1;
-  font-weight: 700;
-  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .qslbl {
-  font-family: var(--font-family-ui);
-  font-weight: 600;
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: rgba(243, 224, 190, 0.85);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  color: rgba(255, 255, 255, 0.70);
   margin-top: 6px;
   text-transform: uppercase;
 }
 
+/* Progress bar */
 .pbar {
-  height: 8px;
-  background: rgba(255, 255, 255, .15);
+  height: 5px;
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   overflow: hidden;
-  margin: 14px 0;
+  margin: 14px 0 0;
 }
 
 .pfill {
   height: 100%;
-  background: linear-gradient(90deg, var(--gold), var(--glt));
+  background: rgba(255, 255, 255, 0.60);
   border-radius: 999px;
-  transition: width .5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: width 0.45s var(--ease);
 }
+
+/* ── FLASHCARD ───────────────────────────────────────────────── */
 
 .cscene {
   perspective: 1000px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   cursor: pointer;
 }
 
@@ -55,32 +59,32 @@
   width: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform .6s cubic-bezier(.4, 1.6, .6, 1);
+  transition: transform 0.55s var(--ease);
 }
 
-.c3d.flipped {
-  transform: rotateY(180deg);
-}
+.c3d.flipped { transform: rotateY(180deg); }
 
 .cface {
-  background: var(--surf);
+  background: var(--bg2);
   border: 1px solid var(--bdr2);
-  border-radius: 22px;
-  padding: 34px 24px;
-  min-height: 220px;
+  border-radius: var(--r-2xl);
+  padding: 36px 24px;
+  min-height: 210px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  box-shadow: 0 10px 30px var(--sh2);
   backface-visibility: hidden;
-  transition: border-color 0.25s, box-shadow 0.25s;
+  -webkit-backface-visibility: hidden;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow   var(--dur-fast) var(--ease);
 }
 
 .cface:hover {
-  border-color: var(--gold);
-  box-shadow: 0 16px 36px var(--sh);
+  border-color: var(--bdr);
+  box-shadow: 0 8px 28px var(--sh-sm);
 }
 
 .cback {
@@ -93,103 +97,105 @@
 }
 
 .cref {
-  font-family: 'Cinzel', serif;
-  font-size: 14px;
-  letter-spacing: 3px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   color: var(--gold);
   margin-bottom: 12px;
-  font-weight: 600;
   text-transform: uppercase;
 }
 
 .chint {
-  font-size: 16px;
+  font-family: var(--font-ui);
+  font-size: 14px;
   color: var(--muted);
   font-style: italic;
 }
 
 .cverse {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-serif);
   font-style: italic;
-  font-size: 20px;
-  line-height: 1.65;
+  font-size: 19px;
+  line-height: 1.70;
   color: var(--txt);
 }
 
 .ctag {
-  font-family: var(--font-family-ui);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: var(--prime);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  color: var(--accent);
   text-transform: uppercase;
-  margin-top: 10px;
-  background: var(--gdim);
+  margin-top: 12px;
+  background: var(--accent-wash);
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
+/* Flip hint */
 .fhint {
   text-align: center;
-  font-family: var(--font-family-ui);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 2px;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   color: var(--muted);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   text-transform: uppercase;
 }
+
+/* ── QUIZ ACTION BUTTONS ────────────────────────────────────── */
 
 .qacts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .qbtn {
   padding: 14px;
-  border-radius: 14px;
-  border: none;
+  border-radius: var(--r-lg);
+  border: 1px solid transparent;
   cursor: pointer;
-  font-family: var(--font-family-ui);
-  font-size: 13px;
+  font-family: var(--font-ui);
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: all .25s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 4px 12px var(--sh2);
+  transition:
+    background    var(--dur-fast) var(--ease),
+    border-color  var(--dur-fast) var(--ease),
+    box-shadow    var(--dur-fast) var(--ease);
 }
 
-.qbtn:active {
-  transform: scale(0.98);
-}
+.qbtn:active { opacity: 0.82; }
 
+/* "Know it" — green */
 .qbtn-k {
-  background: linear-gradient(135deg, #1b7a33, #2e9f4a);
-  color: #EDFFF0;
+  background: #1C6B32;
+  color: #EAF7ED;
 }
 
 .qbtn-k:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(46, 159, 74, 0.3);
+  background: #237A3C;
+  box-shadow: 0 4px 16px rgba(28, 107, 50, 0.28);
 }
 
+/* "Still learning" — ghost */
 .qbtn-s {
   background: var(--surf);
-  border: 1px solid var(--bdr2);
+  border-color: var(--bdr2);
   color: var(--txt);
 }
 
 .qbtn-s:hover {
-  background: var(--gpale);
-  border-color: var(--gold);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--sh2);
+  background: var(--gold-wash);
+  border-color: var(--bdr);
 }
 
-/* ═══════════════════════════════════════ */
-/* PREMIUM CELEBRATION EFFECTS */
-/* ═══════════════════════════════════════ */
+/* ── CONFETTI ────────────────────────────────────────────────── */
 
 .celebration-overlay {
   position: absolute;
@@ -205,20 +211,6 @@
   width: 6px;
   height: 12px;
   border-radius: 2px;
-  animation: fall-rotate 3.5s linear infinite;
+  animation: confetti-fall 3.2s linear infinite;
   opacity: 0.9;
-}
-
-@keyframes fall-rotate {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(400px) rotate(720deg);
-    opacity: 0;
-  }
 }

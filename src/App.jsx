@@ -12,6 +12,7 @@ const AuthModal = lazy(() => import('./components/AuthModal'));
 const About = lazy(() => import('./components/About'));
 const Search = lazy(() => import('./components/Search'));
 const InstallPrompt = lazy(() => import('./components/InstallPrompt'));
+const Plans = lazy(() => import('./components/Plans'));
 import { PageSkeleton, CardSkeleton } from './components/Skeleton.jsx';
 import { handleSearchSelect as routeSearch } from './js/navigation.js';
 import { auth } from './lib/firebase';
@@ -20,7 +21,7 @@ import { loadPreferences, savePreferences, applyPreferences } from './js/prefere
 
 const DEFAULT_PREFERENCES = {
   theme: 'light',
-  fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+  fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
   fontScale: 1,
   accent: 'hsl(348 70% 45%)',
   accentCompl: 'hsl(168 70% 45%)',
@@ -41,6 +42,16 @@ function getSavedChapter() {
   return Number.isInteger(value) && value > 0 ? value : 1;
 }
 
+function trackTab(tab) {
+  try {
+    const raw = localStorage.getItem('sc-recent-tabs');
+    const recent = raw ? JSON.parse(raw) : [];
+    const filtered = recent.filter(id => id !== tab);
+    const updated = [tab, ...filtered].slice(0, 5);
+    localStorage.setItem('sc-recent-tabs', JSON.stringify(updated));
+  } catch {}
+}
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState('home');
   const [isDark, setIsDark] = useState(() => {
@@ -56,6 +67,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
 
   // Load and apply all user preferences on initial mount
   useEffect(() => {
@@ -69,19 +81,21 @@ export default function App() {
     const nextPrefs = { ...currentPrefs, theme: isDark ? 'dark' : 'light' };
     savePreferences(nextPrefs);
     applyPreferences(nextPrefs);
-    localStorage.setItem('sc-dark', isDark ? '1' : '0');
+    try { localStorage.setItem('sc-dark', isDark ? '1' : '0'); } catch {}
   }, [isDark]);
 
   useEffect(() => {
-    if (selectedBook) {
-      localStorage.setItem('sc-selected-book', JSON.stringify(selectedBook));
-    } else {
-      localStorage.removeItem('sc-selected-book');
-    }
+    try {
+      if (selectedBook) {
+        localStorage.setItem('sc-selected-book', JSON.stringify(selectedBook));
+      } else {
+        localStorage.removeItem('sc-selected-book');
+      }
+    } catch {}
   }, [selectedBook]);
 
   useEffect(() => {
-    localStorage.setItem('sc-current-chapter', String(currentChapter));
+    try { localStorage.setItem('sc-current-chapter', String(currentChapter)); } catch {}
   }, [currentChapter]);
 
   useEffect(() => {
@@ -89,6 +103,23 @@ export default function App() {
       setUser(currentUser);
     });
     return () => unsubscribe();
+  }, []);
+
+  // Track tab changes for recently-used drawer section
+  useEffect(() => {
+    trackTab(currentTab);
+  }, [currentTab]);
+
+  // Track online/offline status
+  useEffect(() => {
+    const onOnline  = () => setIsOffline(false);
+    const onOffline = () => setIsOffline(true);
+    window.addEventListener('online',  onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online',  onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -116,6 +147,7 @@ export default function App() {
       case 'home': return <Home selectedBook={selectedBook} currentChapter={currentChapter} setTab={setCurrentTab} user={user} onLogout={handleLogout} onLoginClick={() => setShowAuthModal(true)} setSelectedBook={setSelectedBook} setCurrentChapter={setCurrentChapter} />;
       case 'read': return <Read selectedBook={selectedBook} setSelectedBook={setSelectedBook} currentChapter={currentChapter} setCurrentChapter={setCurrentChapter} setTab={setCurrentTab} />;
       case 'scholar': return <Scholar selectedBook={selectedBook} currentChapter={currentChapter} user={user} onLoginClick={() => setShowAuthModal(true)} />;
+      case 'plans': return <Plans setTab={setCurrentTab} setSelectedBook={setSelectedBook} setCurrentChapter={setCurrentChapter} />;
       case 'pray': return <Pray />;
       case 'quiz': return <Quiz />;
       case 'notes': return <Notes user={user} onLoginClick={() => setShowAuthModal(true)} />;
@@ -128,22 +160,53 @@ export default function App() {
 
   return (
     <div id="app">
-      <header className="hdr" role="banner">
+      {isOffline && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            background: 'hsl(30 30% 20%)',
+            color: 'hsl(40 60% 85%)',
+            textAlign: 'center',
+            fontSize: '13px',
+            padding: '6px 16px',
+            letterSpacing: '0.02em',
+          }}
+        >
+          📵 You're offline — Bible reading, notes, and bookmarks still work
+        </div>
+      )}
+      <header className="hdr" role="banner" style={isOffline ? { marginTop: '31px' } : undefined}>
         <button className="hico" onClick={() => setIsDrawerOpen(true)} title="Open Menu" aria-label="Open navigation menu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
             <path d="M3 6h18M3 12h18M3 18h18" />
           </svg>
         </button>
         <div className="hdr-mid">
-          <div className="hdr-logo">SCRIPTURAI</div>
-          <div className="hdr-sub">The Living Word</div>
+          <h1 className="hdr-logo">SCRIPTURAI</h1>
         </div>
-        <button className="hico" onClick={() => setIsSearchOpen(true)} title="Search" aria-label="Search scripture">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {user && (
+            <button className="hico" onClick={() => { localStorage.setItem('sc-about-tab', 'profile'); setCurrentTab('about'); }} title="Profile" aria-label="Profile" style={{ minWidth: '36px', minHeight: '36px', padding: '6px' }}>
+              {user.photoURL ? (
+                <img src={user.photoURL} alt="" style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '14px', fontWeight: 700 }}>{(user.displayName || user.email || 'U')[0].toUpperCase()}</span>
+              )}
+            </button>
+          )}
+          <button className="hico" onClick={() => setIsSearchOpen(true)} title="Search" aria-label="Search scripture">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <Suspense>
@@ -159,13 +222,16 @@ export default function App() {
           toggleTheme={() => setIsDark(!isDark)}
           currentTab={currentTab}
           onLogout={handleLogout}
+          onSearchClick={() => setIsSearchOpen(true)}
+          selectedBook={selectedBook}
+          currentChapter={currentChapter}
         />
       </Suspense>
 
       <Suspense fallback={null}>
         <InstallPrompt />
       </Suspense>
-      <main className="cnt fade-in" id="cnt">
+      <main className="cnt fade-in" id="cnt" key={currentTab}>
         <Suspense fallback={<PageSkeleton />}>
           {renderTab()}
         </Suspense>
@@ -174,9 +240,10 @@ export default function App() {
       <nav className="bnav" role="navigation" aria-label="Main navigation">
         {[
           { id: 'home', label: 'Home', path: <><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" /><path d="M9 21V12h6v9" /></> },
-          { id: 'read', label: 'Read', path: <><path d="M12 6.5C10 4 6 4 4 6v13c2-2 6-2 8 0M12 6.5C14 4 18 4 20 6v13c-2-2-6-2-8 0" /></> },
+          { id: 'read',    label: 'Read',    path: <><path d="M12 6.5C10 4 6 4 4 6v13c2-2 6-2 8 0M12 6.5C14 4 18 4 20 6v13c-2-2-6-2-8 0" /></> },
           { id: 'scholar', label: 'Scholar', path: <><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" /></> },
-          { id: 'notes', label: 'Notes', path: <><path d="M21 15V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h10l4 4V15z" /></> }
+          { id: 'plans',   label: 'Plans',   path: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></> },
+          { id: 'notes',   label: 'Notes',   path: <><path d="M21 15V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h10l4 4V15z" /></> }
         ].map((navItem) => (
           <button
             key={navItem.id}

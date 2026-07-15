@@ -69,35 +69,41 @@ export async function getChapter(bookNum, chapter, translation) {
     return normalized;
   }
 
-  const ab3 = book.ab3;
   const tid = HAO_TID[tKey];
-
-  // Race all APIs — first one with valid verses wins
-  // Prioritize local files for speed and offline access
-  const race = [];
-  
   const baseUrl = import.meta.env.BASE_URL || '/';
+  const localUrl = `${baseUrl}bibles/${tKey}/${book.ab3.toLowerCase()}/${chapter}.json`;
 
-  // 1. Local JSON files (highest priority)
-  race.push(
-    fetch(`${baseUrl}bibles/${tKey}/${book.ab3.toLowerCase()}/${chapter}.json`, { signal: AbortSignal.timeout(5000) })
-      .then(response => {
-        if (!response.ok) throw new Error("Local file not found");
-        return response.json();
-      })
-      .then(verses => { if (!Array.isArray(verses) || !verses.length) throw new Error("Empty local verses"); return { verses, source: 'local file' }; })
-  );
+  // ── Step 1: Always try the local file first (works offline, fastest) ────────
+  try {
+    const response = await fetch(localUrl, { signal: AbortSignal.timeout(3000) });
+    if (response.ok) {
+      const verses = await response.json();
+      if (Array.isArray(verses) && verses.length) {
+        const result = { verses, source: 'local file' };
+        cache.set(cacheKey, result);
+        setLocal(cacheKey, result);
+        return result;
+      }
+    }
+  } catch {
+    // local file not available for this translation — fall through to network
+  }
 
-  // Bolls Life API - Best source for modern translations
+  // ── Step 2: No local file — require network ──────────────────────────────────
+  if (!navigator.onLine) {
+    throw new Error(`offline:${book.n} ${chapter} is not available offline. Open it while connected to cache it.`);
+  }
+
+  // Race the external APIs — first valid response wins
+  const race = [];
+
+  // Bolls Life API - best source for modern translations
   if (tid) {
     race.push(
       fetchJSON(`https://bolls.life/get-text/${tid}/${book.num}/${chapter}/`)
         .then(d => {
           if (!Array.isArray(d) || !d.length) throw new Error("Invalid Bolls response");
-          return d.map(v => ({
-            verse: v.verse,
-            text: cleanText(v.text)
-          }));
+          return { verses: d.map(v => ({ verse: v.verse, text: cleanText(v.text) })), source: 'Bolls Life' };
         })
     );
   }

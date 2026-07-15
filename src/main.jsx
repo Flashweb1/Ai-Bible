@@ -8,6 +8,8 @@ import './css/scholar.css'
 import './css/prayer.css'
 import './css/quiz.css'
 import './css/notes.css'
+import './css/bookmarks.css'
+import './css/plans.css'
 import App from './App.jsx'
 import { AppProvider } from './AppContext.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
@@ -36,7 +38,7 @@ if ('serviceWorker' in navigator) {
     }
   });
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js?v=2')
+    navigator.serviceWorker.register('/sw.js?v=3')
       .then(reg => {
         console.log('[SW] Registered, scope:', reg.scope);
         setupNotifications();

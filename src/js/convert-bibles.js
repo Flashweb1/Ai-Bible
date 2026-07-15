@@ -83,8 +83,15 @@ async function convertBibleXMLtoJSON() {
         fs.mkdirSync(translationOutputDir, { recursive: true });
       }
 
+      // Map XML book names to our BOOKS entries (e.g. "Psalm" -> "Psalms")
+      const BOOK_NAME_ALIASES = {
+        psalm: 'Psalms',
+        songofsolomon: 'Song of Solomon',
+      };
+
       for (const xmlBook of xmlBooks) {
-        const bookName = xmlBook.name || xmlBook.n || xmlBook.bname;
+        let bookName = xmlBook.name || xmlBook.n || xmlBook.bname;
+        bookName = BOOK_NAME_ALIASES[bookName.toLowerCase().replace(/\s+/g, '')] || bookName;
         const bookData = BOOKS.find(b => b.n.toLowerCase() === bookName.toLowerCase());
 
         if (!bookData) {
@@ -102,7 +109,7 @@ async function convertBibleXMLtoJSON() {
         const xmlChapters = Array.isArray(rawChapters) ? rawChapters : [rawChapters];
 
         for (const xmlChapter of xmlChapters) {
-          const chapterNum = getProp(xmlChapter, 'num', 'n', 'c', 'number');
+          const chapterNum = getProp(xmlChapter, 'cnumber', 'num', 'n', 'c', 'number');
           const verses = [];
 
           const rawVerses = getProp(xmlChapter, 'VERS', 'VERSE', 'v', 'verse');
@@ -119,7 +126,7 @@ async function convertBibleXMLtoJSON() {
                 .replace(/\s*[a-z]+: (or|Heb|Gk|Gr|Lat|Lit|meaning).+$/gi, '') // Remove Margin Notes
                 .trim();
               
-              const vNum = getProp(xmlVerse, 'num', 'n', 'v', 'number');
+              const vNum = getProp(xmlVerse, 'vnumber', 'num', 'n', 'v', 'number');
               verses.push({
                 verse: vNum ? parseInt(vNum, 10) : null,
                 text: cleanText
@@ -144,7 +151,6 @@ async function convertBibleXMLtoJSON() {
       console.log(`  Successfully processed ${actualFileName}`);
     } catch (error) {
       console.error(`  Fatal error processing ${actualFileName}:`, error.message);
-      process.exit(1);
     }
   }
   console.log('Bible XML to JSON conversion complete!');

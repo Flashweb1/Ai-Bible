@@ -1,5 +1,5 @@
 import { getToken, onMessage } from "firebase/messaging";
-import { messaging } from "./firebase.js";
+import { getMessagingInstance } from "./firebase.js";
 
 export async function requestNotificationPermission() {
   try {
@@ -17,7 +17,12 @@ export async function getFCMToken() {
       console.warn("[Notifications] VITE_FIREBASE_VAPID_KEY not set");
       return null;
     }
-    const token = await getToken(messaging, { vapidKey });
+    const msg = await getMessagingInstance();
+    if (!msg) {
+      console.warn("[Notifications] Firebase Messaging not supported in this browser");
+      return null;
+    }
+    const token = await getToken(msg, { vapidKey });
     return token;
   } catch (err) {
     console.warn("[Notifications] Failed to get FCM token:", err);
@@ -50,8 +55,10 @@ export async function unregisterTokenOnBackend(token) {
   } catch {}
 }
 
-export function onForegroundMessage(callback) {
-  onMessage(messaging, (payload) => {
+export async function onForegroundMessage(callback) {
+  const msg = await getMessagingInstance();
+  if (!msg) return;
+  onMessage(msg, (payload) => {
     callback(payload);
   });
 }

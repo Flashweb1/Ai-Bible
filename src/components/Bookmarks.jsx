@@ -9,60 +9,62 @@ export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }
   const showToast = useToast();
   const { bookmarks = [], deleteBookmark } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('book');
 
   const filteredBookmarks = bookmarks.filter(b => {
     const q = searchQuery.toLowerCase();
-    return (
-      b.bn?.toLowerCase().includes(q) ||
-      b.text?.toLowerCase().includes(q) ||
-      `${b.ch}:${b.vn}`.includes(q)
-    );
+    return b.bn?.toLowerCase().includes(q) || b.text?.toLowerCase().includes(q) || `${b.ch}:${b.vn}`.includes(q);
+  });
+
+  const sorted = [...filteredBookmarks].sort((a, b) => {
+    if (sortBy === 'recent') {
+      return new Date(b.date || 0) - new Date(a.date || 0);
+    }
+    const cmp = (a.bn || '').localeCompare(b.bn || '');
+    if (cmp !== 0) return cmp;
+    return (a.ch || 0) - (b.ch || 0);
+  });
+
+  const grouped = {};
+  sorted.forEach(b => {
+    const key = b.bn || 'Unknown';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(b);
   });
 
   const handleCopy = async (b) => {
     try {
       await navigator.clipboard.writeText(`"${b.text}" — ${b.bn} ${b.ch}:${b.vn}`);
       showToast('Verse copied to clipboard!');
-    } catch {
-      showToast('Could not copy - clipboard access denied');
-    }
+    } catch { showToast('Could not copy - clipboard access denied'); }
   };
 
   const handleAskScholar = (b) => {
-    // We can pre-fill scholar chat by passing state or setting query params/local storage, 
-    // or we can set it in a shared state. Let's write the query to localStorage so Scholar can read it.
     localStorage.setItem('sc-scholar-query', `Explain the significance of ${b.bn} ${b.ch}:${b.vn}: "${b.text}"`);
     setTab('scholar');
   };
 
   const handleJumpToRead = (b) => {
-    // Find the correct book object from the static BOOKS database to prevent a 'Book not found' error
     const bookObj = BOOKS.find(x => x.ab === b.bk || x.n === b.bn);
-    if (bookObj) {
-      setSelectedBook(bookObj);
-    } else {
-      // Fallback fallback if not found
-      setSelectedBook({ num: 1, n: b.bn, ab: b.bk, ch: 1 });
-    }
+    if (bookObj) setSelectedBook(bookObj);
+    else setSelectedBook({ num: 1, n: b.bn, ab: b.bk, ch: 1 });
     setCurrentChapter(b.ch);
     setTab('read');
   };
 
   return (
     <div className="fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <div className="bm-head">
         <span className="lbl" style={{ margin: 0 }}>Saved Scripture ({bookmarks.length})</span>
+        <div className="bm-sort">
+          <button className={`bm-sort-btn ${sortBy === 'book' ? 'on' : ''}`} onClick={() => setSortBy('book')}>By Book</button>
+          <button className={`bm-sort-btn ${sortBy === 'recent' ? 'on' : ''}`} onClick={() => setSortBy('recent')}>Recent</button>
+        </div>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <input
-          type="text"
-          className="chatinp"
-          placeholder="Search saved verses..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box' }}
-        />
+      <div style={{ marginBottom: '16px' }}>
+        <input type="text" className="bm-search" placeholder="Search saved verses..." value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
 
       {filteredBookmarks.length === 0 ? (
@@ -73,42 +75,27 @@ export default function Bookmarks({ setTab, setSelectedBook, setCurrentChapter }
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          {filteredBookmarks.map(b => (
-            <div key={b.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div 
-                  style={{ fontFamily: "'Playfair Display', serif", fontSize: '17px', color: 'var(--gold)', fontWeight: '600', cursor: 'pointer' }}
-                  onClick={() => handleJumpToRead(b)}
-                  title="Jump to Chapter"
-                >
-                  {b.bn} {b.ch}:{b.vn}
+        Object.entries(grouped).map(([book, items]) => (
+          <div key={book} className="bm-group">
+            <div className="bm-group-label">{book} ({items.length})</div>
+            {items.map(b => (
+              <div key={b.id} className="bm-card">
+                <div className="bm-card-top">
+                  <div className="bm-ref" onClick={() => handleJumpToRead(b)} title="Jump to Chapter">
+                    {b.bn} {b.ch}:{b.vn}
+                  </div>
+                  <div className="bm-date">{b.date}</div>
                 </div>
-                <div style={{ fontSize: '11px', opacity: 0.4 }}>{b.date}</div>
+                <div className="bm-text">"{b.text}"</div>
+                <div className="bm-acts">
+                  <button className="bm-btn" onClick={() => handleAskScholar(b)}>✨ Scholar</button>
+                  <button className="bm-btn" onClick={() => handleCopy(b)}>📋 Copy</button>
+                  <button className="bm-btn bm-btn-del" onClick={() => { if (window.confirm('Remove this bookmark?')) deleteBookmark(b.id); }}>✕ Remove</button>
+                </div>
               </div>
-              
-              <div style={{ fontStyle: 'italic', fontSize: '15px', lineHeight: '1.6', color: 'var(--txt)', borderLeft: '2px solid var(--bdr)', paddingLeft: '10px', margin: '4px 0' }}>
-                "{b.text}"
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px', justifyContent: 'flex-end' }}>
-                <button className="hbtn" style={{ fontSize: '10px', padding: '4px 10px' }} onClick={() => handleAskScholar(b)}>
-                  ✨ Scholar
-                </button>
-                <button className="hbtn" style={{ fontSize: '10px', padding: '4px 10px' }} onClick={() => handleCopy(b)}>
-                  📋 Copy
-                </button>
-                <button 
-                  className="hbtn" 
-                  style={{ fontSize: '10px', padding: '4px 10px', borderColor: 'rgba(240, 80, 80, 0.4)', color: '#ff6b6b' }} 
-                  onClick={() => { if (window.confirm('Remove this bookmark?')) deleteBookmark(b.id); }}
-                >
-                  ✕ Remove
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ))
       )}
     </div>
   );

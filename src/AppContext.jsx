@@ -21,6 +21,7 @@ export function AppProvider({ children }) {
   const [notes, setNotes] = useState(() => loadSavedJSON('sc-notes', []));
   const [prayers, setPrayers] = useState(() => loadSavedJSON('sc-prayers', []));
   const [devotionals, setDevotionals] = useState(() => loadSavedJSON('sc-devotions', []));
+  const [readingPlans, setReadingPlans] = useState(() => loadSavedJSON('sc-plans', []));
   
   const [user, setUser] = useState(null);
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
@@ -57,6 +58,11 @@ export function AppProvider({ children }) {
               data.devotionals.forEach(cd => { if (!merged.find(ld => ld.id === cd.id)) merged.push(cd); });
               return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
             });
+            if (data.readingPlans) setReadingPlans(prev => {
+              const merged = [...prev];
+              data.readingPlans.forEach(cp => { if (!merged.find(lp => lp.id === cp.id)) merged.push(cp); });
+              return merged.sort((a, b) => new Date(b.startedAt || 0) - new Date(a.startedAt || 0));
+            });
           }
         } catch (err) {
           console.error("Failed to sync from Firebase:", err);
@@ -72,18 +78,19 @@ export function AppProvider({ children }) {
 
   // Auto-sync state changes back to LocalStorage AND Firebase
   useEffect(() => {
-    localStorage.setItem('sc-hl', JSON.stringify(highlights));
-    localStorage.setItem('sc-bm', JSON.stringify(bookmarks));
-    localStorage.setItem('sc-notes', JSON.stringify(notes));
-    localStorage.setItem('sc-prayers', JSON.stringify(prayers));
-    localStorage.setItem('sc-devotions', JSON.stringify(devotionals));
+    try { localStorage.setItem('sc-hl', JSON.stringify(highlights)); } catch {}
+    try { localStorage.setItem('sc-bm', JSON.stringify(bookmarks)); } catch {}
+    try { localStorage.setItem('sc-notes', JSON.stringify(notes)); } catch {}
+    try { localStorage.setItem('sc-prayers', JSON.stringify(prayers)); } catch {}
+    try { localStorage.setItem('sc-devotions', JSON.stringify(devotionals)); } catch {}
+    try { localStorage.setItem('sc-plans', JSON.stringify(readingPlans)); } catch {}
 
     if (user && isCloudLoaded) {
       const docRef = doc(db, 'users', user.uid, 'data', 'appState');
-      setDoc(docRef, { highlights, bookmarks, notes, prayers, devotionals }, { merge: true })
+      setDoc(docRef, { highlights, bookmarks, notes, prayers, devotionals, readingPlans }, { merge: true })
         .catch(err => console.error("Failed to backup to Firebase:", err));
     }
-  }, [highlights, bookmarks, notes, prayers, devotionals, user, isCloudLoaded]);
+  }, [highlights, bookmarks, notes, prayers, devotionals, readingPlans, user, isCloudLoaded]);
 
   const toggleHighlight = (key, color) => {
     setHighlights(prev => {
@@ -116,6 +123,42 @@ export function AppProvider({ children }) {
 
   const deleteDevotional = (id) => {
     setDevotionals(prev => prev.filter(d => d.id !== id));
+  };
+
+  // ── Reading Plan actions ──────────────────────────────────────────────────
+  /** Start a plan. If already active, returns the existing one. */
+  const startPlan = (planTemplate) => {
+    setReadingPlans(prev => {
+      if (prev.find(p => p.planId === planTemplate.id && !p.completedAt)) return prev;
+      const newPlan = {
+        id: 'plan-' + Date.now(),
+        planId: planTemplate.id,
+        title: planTemplate.title,
+        icon: planTemplate.icon,
+        totalDays: planTemplate.totalDays,
+        completedDays: [],   // array of day indexes (0-based) that are done
+        startedAt: new Date().toISOString(),
+        completedAt: null,
+      };
+      return [newPlan, ...prev];
+    });
+  };
+
+  /** Mark a day (0-based index) as complete for a given active plan. */
+  const markDayComplete = (planInstanceId, dayIndex) => {
+    setReadingPlans(prev => prev.map(p => {
+      if (p.id !== planInstanceId) return p;
+      const alreadyDone = p.completedDays.includes(dayIndex);
+      const completedDays = alreadyDone
+        ? p.completedDays.filter(d => d !== dayIndex)
+        : [...p.completedDays, dayIndex].sort((a, b) => a - b);
+      const completedAt = completedDays.length >= p.totalDays ? new Date().toISOString() : null;
+      return { ...p, completedDays, completedAt };
+    }));
+  };
+
+  const deletePlan = (planInstanceId) => {
+    setReadingPlans(prev => prev.filter(p => p.id !== planInstanceId));
   };
 
   // Calculate streak
@@ -161,6 +204,7 @@ export function AppProvider({ children }) {
       notes, setNotes, 
       prayers, setPrayers, 
       devotionals, addDevotional, updateDevotionalDay, deleteDevotional,
+      readingPlans, startPlan, markDayComplete, deletePlan,
       streak 
     }}>
       {children}

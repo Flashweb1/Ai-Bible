@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MEMORY_VERSES } from '../js/data.js';
 import { usePageTitle } from '../hooks/usePageTitle.js';
+import { shareVerse } from '../lib/shareImage.js';
 
 export default function Quiz() {
     usePageTitle('Memory Quiz');
@@ -119,6 +120,7 @@ export default function Quiz() {
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
                     <button className="btn btn-gold" style={{ padding: '13px', fontSize: '16px' }} onClick={startQuiz}>🔄 Try Again</button>
+                    <button className="btn btn-ghost" style={{ padding: '11px' }} onClick={() => shareVerse({ text: `I scored ${knownCount}/${deck.length} (${p}%) on the Memory Verse Quiz!`, ref: 'Scripturai' })}>📤 Share</button>
                     <button className="btn btn-ghost" style={{ padding: '11px' }} onClick={() => setView('menu')}>← Back</button>
                 </div>
             </div>

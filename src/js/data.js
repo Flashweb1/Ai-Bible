@@ -133,25 +133,6 @@ export const SUGGESTIONS = [
   "The Holy Spirit explained",
 ];
 
-export const MENU_LINKS = [
-  { id: 'home', label: 'Home', icon: '🏠', group: 'Quick Access' },
-  { id: 'read', label: 'Read Bible', icon: '📖', group: 'Quick Access' },
-  { id: 'scholar', label: 'AI Scholar', icon: '🤖', group: 'Quick Access' },
-  { id: 'audio_bible', label: 'Audio Bible', icon: '🎧', group: 'Quick Access' },
-  { id: 'prayer', label: 'Prayer Journal', icon: '🙏', group: 'Personal' },
-  { id: 'bookmarks', label: 'Bookmarks', icon: '🔖', group: 'Personal' },
-  { id: 'notes', label: 'Notes', icon: '📝', group: 'Personal' },
-  { id: 'day_by_day', label: 'Day by Day', icon: '☀️', group: 'Personal' },
-  { id: 'reading_plans', label: 'Reading Plans', icon: '📋', group: 'Personal' },
-  { id: 'profile', label: 'My Profile', icon: '👤', group: 'Personal' },
-  { id: 'settings', label: 'Settings', icon: '⚙️', group: 'App' },
-  { id: 'notifications', label: 'Notifications', icon: '🔔', group: 'App' },
-  { id: 'about', label: 'About Scripturai', icon: 'ℹ️', group: 'App' },
-  { id: 'donate', label: 'Support Project', icon: '💝', group: 'App' },
-  { id: 'privacy', label: 'Privacy Policy', icon: '🔒', group: 'App' },
-  { id: 'contact', label: 'Send Feedback', icon: '💬', group: 'App' },
-];
-
 export const SETTINGS_OPTIONS = {
   themes: [
     { id: 'light', name: 'Light', color: '#ffffff' },
@@ -172,3 +153,156 @@ export const DEFAULT_USER_CONFIG = {
   redLetter: true,
   autoScroll: false
 };
+
+// ─── READING PLANS ───────────────────────────────────────────────────────────
+// Each day entry: { ref: 'BookAb3 ch', bookNum, chapter }
+// Plans are defined as templates; user progress is stored in AppContext.
+
+export const READING_PLANS = [
+  {
+    id: 'bible-in-a-year',
+    title: 'Bible in a Year',
+    description: 'Read through the entire Bible in 365 days with a balanced OT/NT mix each day.',
+    icon: '📖',
+    totalDays: 365,
+    category: 'Full Bible',
+    // Abbreviated schedule: Genesis through Revelation, ~3 chapters/day
+    // Full 365-day schedule stored as a flat array of {bookNum, chapter} pairs
+    days: (() => {
+      const schedule = [];
+      // OT order by book num, NT woven in every 3 days starting day 1
+      const otBooks = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39];
+      const ntBooks = [40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66];
+      const allReadings = [];
+      // Flatten all OT chapters
+      const CHAPTERS = {1:50,2:40,3:27,4:36,5:34,6:24,7:21,8:4,9:31,10:24,11:22,12:25,13:29,14:36,15:10,16:13,17:10,18:42,19:150,20:31,21:12,22:8,23:66,24:52,25:5,26:48,27:12,28:14,29:3,30:9,31:1,32:4,33:7,34:3,35:3,36:3,37:2,38:14,39:4,40:28,41:16,42:24,43:21,44:28,45:16,46:16,47:13,48:6,49:6,50:4,51:4,52:5,53:3,54:6,55:4,56:3,57:1,58:13,59:5,60:5,61:3,62:5,63:1,64:1,65:1,66:22};
+      otBooks.forEach(bn => { for (let c = 1; c <= (CHAPTERS[bn]||1); c++) allReadings.push({ bookNum: bn, chapter: c }); });
+      const ntReadings = [];
+      ntBooks.forEach(bn => { for (let c = 1; c <= (CHAPTERS[bn]||1); c++) ntReadings.push({ bookNum: bn, chapter: c }); });
+      // Distribute into 365 days: ~3 OT + 1 NT reading per day
+      const perDay = Math.ceil(allReadings.length / 365);
+      const ntPerDay = Math.ceil(ntReadings.length / 365);
+      for (let d = 0; d < 365; d++) {
+        const readings = [];
+        for (let i = 0; i < perDay && allReadings.length; i++) readings.push(allReadings.shift());
+        for (let i = 0; i < ntPerDay && ntReadings.length; i++) readings.push(ntReadings.shift());
+        schedule.push(readings.length ? readings : [{ bookNum: 66, chapter: 22 }]);
+      }
+      return schedule;
+    })(),
+  },
+  {
+    id: 'new-testament-30',
+    title: '30-Day New Testament',
+    description: 'Read the entire New Testament in 30 focused days.',
+    icon: '✝️',
+    totalDays: 30,
+    category: 'New Testament',
+    days: (() => {
+      const CHAPTERS = {40:28,41:16,42:24,43:21,44:28,45:16,46:16,47:13,48:6,49:6,50:4,51:4,52:5,53:3,54:6,55:4,56:3,57:1,58:13,59:5,60:5,61:3,62:5,63:1,64:1,65:1,66:22};
+      const all = [];
+      for (let bn = 40; bn <= 66; bn++) { for (let c = 1; c <= (CHAPTERS[bn]||1); c++) all.push({ bookNum: bn, chapter: c }); }
+      const days = [];
+      const perDay = Math.ceil(all.length / 30);
+      for (let d = 0; d < 30; d++) {
+        days.push(all.splice(0, perDay));
+      }
+      return days;
+    })(),
+  },
+  {
+    id: 'psalms-proverbs',
+    title: 'Psalms & Proverbs',
+    description: 'A peaceful 31-day journey through poetry, wisdom, and daily guidance.',
+    icon: '🕊️',
+    totalDays: 31,
+    category: 'Wisdom',
+    days: (() => {
+      // 5 Psalms + 1 Proverbs chapter per day (classic devotional pattern)
+      const days = [];
+      for (let d = 0; d < 31; d++) {
+        const readings = [];
+        for (let i = 0; i < 5; i++) {
+          const psalmCh = (d * 5 + i) % 150 + 1;
+          readings.push({ bookNum: 19, chapter: psalmCh });
+        }
+        readings.push({ bookNum: 20, chapter: d + 1 });
+        days.push(readings);
+      }
+      return days;
+    })(),
+  },
+  {
+    id: 'gospel-of-john',
+    title: 'Gospel of John',
+    description: 'A 21-day deep dive into the Gospel of John — one chapter per day.',
+    icon: '✨',
+    totalDays: 21,
+    category: 'Gospels',
+    days: Array.from({ length: 21 }, (_, i) => [{ bookNum: 43, chapter: i + 1 }]),
+  },
+  {
+    id: 'sermon-on-the-mount',
+    title: 'Sermon on the Mount',
+    description: 'A 7-day study of Matthew 5–7 with reflection on each section.',
+    icon: '⛰️',
+    totalDays: 7,
+    category: 'Study',
+    days: [
+      [{ bookNum: 40, chapter: 5 }],
+      [{ bookNum: 40, chapter: 5 }],
+      [{ bookNum: 40, chapter: 6 }],
+      [{ bookNum: 40, chapter: 6 }],
+      [{ bookNum: 40, chapter: 7 }],
+      [{ bookNum: 40, chapter: 7 }],
+      [{ bookNum: 40, chapter: 5 }, { bookNum: 40, chapter: 6 }, { bookNum: 40, chapter: 7 }],
+    ],
+  },
+  {
+    id: 'advent',
+    title: 'Advent Christmas',
+    description: 'A 25-day journey through the prophecies and story of Christ\'s birth.',
+    icon: '🎄',
+    totalDays: 25,
+    category: 'Seasonal',
+    days: [
+      [{ bookNum: 23, chapter: 9 }],   // Isaiah 9
+      [{ bookNum: 23, chapter: 11 }],  // Isaiah 11
+      [{ bookNum: 33, chapter: 5 }],   // Micah 5
+      [{ bookNum: 38, chapter: 9 }],   // Zechariah 9
+      [{ bookNum: 23, chapter: 40 }],  // Isaiah 40
+      [{ bookNum: 39, chapter: 3 }],   // Malachi 3
+      [{ bookNum: 42, chapter: 1 }],   // Luke 1
+      [{ bookNum: 42, chapter: 1 }],   // Luke 1 (cont'd reflection)
+      [{ bookNum: 42, chapter: 2 }],   // Luke 2
+      [{ bookNum: 40, chapter: 1 }],   // Matthew 1
+      [{ bookNum: 40, chapter: 2 }],   // Matthew 2
+      [{ bookNum: 43, chapter: 1 }],   // John 1
+      [{ bookNum: 45, chapter: 1 }],   // Romans 1
+      [{ bookNum: 48, chapter: 4 }],   // Galatians 4
+      [{ bookNum: 49, chapter: 1 }],   // Ephesians 1
+      [{ bookNum: 50, chapter: 2 }],   // Philippians 2
+      [{ bookNum: 58, chapter: 1 }],   // Hebrews 1
+      [{ bookNum: 43, chapter: 3 }],   // John 3
+      [{ bookNum: 42, chapter: 2 }],   // Luke 2 (shepherds)
+      [{ bookNum: 40, chapter: 2 }],   // Matthew 2 (wise men)
+      [{ bookNum: 23, chapter: 53 }],  // Isaiah 53
+      [{ bookNum: 19, chapter: 72 }],  // Psalm 72
+      [{ bookNum: 19, chapter: 98 }],  // Psalm 98
+      [{ bookNum: 19, chapter: 136 }], // Psalm 136
+      [{ bookNum: 42, chapter: 2 }, { bookNum: 43, chapter: 1 }], // Christmas Day
+    ],
+  },
+];
+
+export const MENU_LINKS = [
+  { id: 'home', label: 'Home', icon: '🏠', group: 'Main' },
+  { id: 'read', label: 'Read Bible', icon: '📖', group: 'Main' },
+  { id: 'scholar', label: 'AI Scholar', icon: '🤖', group: 'Main' },
+  { id: 'plans', label: 'Reading Plans', icon: '📅', group: 'Main' },
+  { id: 'pray', label: 'Prayer Journal', icon: '🙏', group: 'Main' },
+  { id: 'bookmarks', label: 'Bookmarks', icon: '🔖', group: 'Library' },
+  { id: 'notes', label: 'Notes', icon: '📝', group: 'Library' },
+  { id: 'settings', label: 'Settings', icon: '⚙️', group: 'App' },
+  { id: 'about', label: 'About & Help', icon: 'ℹ️', group: 'App' },
+];

@@ -4,10 +4,10 @@ import { TRANSLATIONS } from '../js/data.js';
 import { usePageTitle } from '../hooks/usePageTitle.js';
 
 const FONT_FAMILIES = [
-  { id: 'system', label: 'System', value: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' },
-  { id: 'inter', label: 'Inter', value: 'Inter, system-ui, -apple-system, Roboto, Arial' },
-  { id: 'serif', label: 'Merriweather', value: 'Merriweather, Georgia, serif' },
-  { id: 'noto', label: 'Noto Serif', value: 'Noto Serif, Georgia, serif' }
+  { id: 'system', label: 'System', value: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+  { id: 'inter', label: 'Inter', value: 'Inter, system-ui, -apple-system, sans-serif' },
+  { id: 'lora', label: 'Lora', value: 'Lora, Georgia, serif' },
+  { id: 'georgia', label: 'Georgia', value: 'Georgia, "Times New Roman", serif' }
 ];
 
 function hexToRgb(hex) {
@@ -142,7 +142,7 @@ export default function Settings({ isDark, setIsDark, setTab }) {
   return (
     <div className="settings-page">
       <div className="page-header">
-        <button className="hico" onClick={() => setTab('home')} title="Back to Home">
+        <button className="hico" onClick={() => setTab('home')} title="Back to Home" aria-label="Back to Home">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M15 18l-6-6 6-6" />
           </svg>

@@ -19,8 +19,7 @@ export default function AuthModal({ onClose }) {
       }
       onClose(); // Close modal on success
     } catch (err) {
-      // Clean up the error message string
-      setError(err.message.replace('Firebase: ', '')); 
+      setError((err.message || '').replace('Firebase: ', ''));
     }
   };
 
@@ -31,7 +30,7 @@ export default function AuthModal({ onClose }) {
       await signInWithPopup(auth, provider);
       onClose();
     } catch (err) {
-      setError(err.message.replace('Firebase: ', ''));
+      setError((err.message || '').replace('Firebase: ', ''));
     }
   };
 

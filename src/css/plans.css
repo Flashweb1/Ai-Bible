@@ -1,0 +1,424 @@
+/* ════════════════════════════════════════════════════════════
+   READING PLANS
+   ════════════════════════════════════════════════════════════ */
+
+/* ── PAGE HEADER ────────────────────────────────────────────── */
+
+.plans-hdr {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--bdr2);
+}
+
+.plans-title {
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--txt);
+  letter-spacing: 0.01em;
+}
+
+.plans-sub {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── ACTIVE PLAN CARD ───────────────────────────────────────── */
+
+.active-plan-card {
+  background: var(--accent);
+  border-radius: var(--r-2xl);
+  padding: 22px 20px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.active-plan-card:hover { opacity: 0.92; }
+
+.apc-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.apc-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.apc-badge {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.12);
+  padding: 3px 9px;
+  border-radius: var(--r-xl);
+}
+
+.apc-title {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+}
+
+.apc-day {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+/* Progress bar */
+.plan-pbar {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.20);
+  border-radius: 999px;
+  margin: 12px 0 6px;
+  overflow: hidden;
+}
+
+.plan-pfill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  transition: width 0.45s var(--ease);
+}
+
+.apc-pct {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: right;
+}
+
+/* ── TODAY'S READING CARD ───────────────────────────────────── */
+
+.today-card {
+  background: var(--bg2);
+  border: 1px solid var(--bdr2);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-xl);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  animation: fade-in var(--dur-mid) var(--ease);
+}
+
+.today-lbl {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.today-readings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.today-reading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-reading-ref {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--txt);
+}
+
+.today-reading-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-md);
+  padding: 7px 14px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--btn-txt);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.today-reading-btn:hover { background: var(--accent-dim); }
+
+.today-reading-done {
+  background: transparent;
+  border: 1px solid rgba(34, 139, 68, 0.4);
+  color: rgba(34, 139, 68, 0.8);
+  cursor: default;
+}
+
+.today-complete-btn {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--gold);
+  border: none;
+  border-radius: var(--r-md);
+  padding: 11px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--btn-txt);
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.today-complete-btn:hover { background: var(--gold-lt); }
+.today-complete-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ── PLAN BROWSER ───────────────────────────────────────────── */
+
+.plan-category-filter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 16px;
+  padding-bottom: 2px;
+}
+
+.plan-category-filter::-webkit-scrollbar { display: none; }
+
+.plan-cat-btn {
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--r-xl);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background    var(--dur-fast) var(--ease),
+    border-color  var(--dur-fast) var(--ease),
+    color         var(--dur-fast) var(--ease);
+}
+
+.plan-cat-btn.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--btn-txt);
+}
+
+.plan-cat-btn:not(.on):hover {
+  border-color: var(--bdr);
+  color: var(--txt);
+}
+
+/* Plan grid */
+.plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 380px) {
+  .plan-grid { grid-template-columns: 1fr; }
+}
+
+.plan-card {
+  background: var(--bg2);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--r-xl);
+  padding: 18px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition:
+    border-color  var(--dur-fast) var(--ease),
+    box-shadow    var(--dur-fast) var(--ease),
+    background    var(--dur-fast) var(--ease);
+}
+
+.plan-card:hover {
+  border-color: var(--bdr);
+  box-shadow: 0 4px 20px var(--sh-sm);
+  background: var(--surf);
+}
+
+.plan-card.active-plan {
+  border-color: var(--accent);
+  border-width: 1.5px;
+}
+
+.plan-card-icon { font-size: 26px; line-height: 1; }
+
+.plan-card-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt);
+  line-height: 1.3;
+}
+
+.plan-card-days {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+}
+
+.plan-card-desc {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.plan-card-active-badge {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-wash);
+  padding: 2px 7px;
+  border-radius: var(--r-sm);
+  align-self: flex-start;
+}
+
+/* ── PLAN DETAIL / PROGRESS VIEW ────────────────────────────── */
+
+.plan-detail-hdr {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--bdr2);
+}
+
+.plan-detail-icon { font-size: 32px; flex-shrink: 0; }
+
+.plan-detail-title {
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--txt);
+}
+
+.plan-detail-meta {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Calendar grid — one cell per day */
+.plan-day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 400px) {
+  .plan-day-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+}
+
+.plan-day-cell {
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  background: var(--surf);
+  border: 1px solid var(--bdr2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background    var(--dur-fast) var(--ease),
+    border-color  var(--dur-fast) var(--ease),
+    color         var(--dur-fast) var(--ease);
+}
+
+.plan-day-cell:hover { border-color: var(--bdr); color: var(--txt); }
+
+.plan-day-cell.done {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--btn-txt);
+}
+
+.plan-day-cell.today {
+  border-color: var(--accent);
+  border-width: 2px;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.plan-day-cell.done.today {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--btn-txt);
+}
+
+/* Plan action buttons */
+.plan-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Completion celebration */
+.plan-complete-banner {
+  background: var(--gold);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  animation: fade-in var(--dur-mid) var(--ease);
+}
+
+.plan-complete-icon { font-size: 36px; margin-bottom: 8px; }
+
+.plan-complete-title {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--btn-txt);
+}
+
+.plan-complete-sub {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 4px;
+}

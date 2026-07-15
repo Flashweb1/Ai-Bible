@@ -14,11 +14,13 @@ export default function About({ user, setTab }) {
   const [donationSuccess, setDonationSuccess] = useState(false);
 
   useEffect(() => {
-    const tab = localStorage.getItem('sc-about-tab');
-    if (tab) {
-      localStorage.removeItem('sc-about-tab');
-      setSubView(tab);
-    }
+    try {
+      const tab = localStorage.getItem('sc-about-tab');
+      if (tab) {
+        localStorage.removeItem('sc-about-tab');
+        setSubView(tab);
+      }
+    } catch {}
   }, []);
 
   const handleFeedbackSubmit = (e) => {
@@ -168,7 +170,7 @@ export default function About({ user, setTab }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '5px' }}>
-        <button className="hico" onClick={() => setTab('home')} title="Back to Home">
+        <button className="hico" onClick={() => setTab('home')} title="Back to Home" aria-label="Back to Home">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M15 18l-6-6 6-6" />
           </svg>
