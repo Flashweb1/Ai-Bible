@@ -36,7 +36,28 @@ function getLocal(key) {
   try { const v = localStorage.getItem('sc-v:' + key); return v ? JSON.parse(v) : null } catch { return null }
 }
 function setLocal(key, data) {
-  try { localStorage.setItem('sc-v:' + key, JSON.stringify(data)) } catch {}
+  try {
+    localStorage.setItem('sc-v:' + key, JSON.stringify(data));
+  } catch (e) {
+    console.warn('[API] localStorage write failed for', key, e.message);
+  }
+}
+
+/** Cache a URL + Response in the Service Worker's BIBLE_CACHE */
+async function cacheInSW(url, response) {
+  try {
+    if ('caches' in window) {
+      const cache = await caches.open('scripturai-bibles-v1');
+      await cache.put(url, response);
+    }
+  } catch (e) {
+    // Fallback: try postMessage to SW
+    try {
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CACHE_BIBLE_CHAPTER', url });
+      }
+    } catch {}
+  }
 }
 
 async function fetchJSON(url, ms = 3000) {
@@ -77,11 +98,13 @@ export async function getChapter(bookNum, chapter, translation) {
   try {
     const response = await fetch(localUrl, { signal: AbortSignal.timeout(3000) });
     if (response.ok) {
+      const clone = response.clone();
       const verses = await response.json();
       if (Array.isArray(verses) && verses.length) {
         const result = { verses, source: 'local file' };
         cache.set(cacheKey, result);
         setLocal(cacheKey, result);
+        cacheInSW(localUrl, clone);
         return result;
       }
     }
@@ -133,6 +156,12 @@ export async function getChapter(bookNum, chapter, translation) {
   const normalizedWinner = Array.isArray(winner) ? { verses: winner, source: 'unknown' } : winner;
   cache.set(cacheKey, normalizedWinner);
   setLocal(cacheKey, normalizedWinner);
+  // Cache in SW for offline use
+  try {
+    const swBody = JSON.stringify(normalizedWinner.verses);
+    const swResp = new Response(swBody, { status: 200, headers: { 'Content-Type': 'application/json' } });
+    cacheInSW(localUrl, swResp);
+  } catch {}
   return normalizedWinner;
 }
 

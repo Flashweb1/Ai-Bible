@@ -80,24 +80,19 @@ function isFirebaseOrAI(url) {
 /**
  * Cache-first: serve from cache, update cache in background.
  * Used for Bible JSON files — they never change content.
+ * When cache is cold and offline, throws so the app can fall back to
+ * localStorage or native browser cache instead of getting a fake 503.
  */
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);
   if (cached) return cached;
 
-  try {
-    const response = await fetch(request);
-    if (response && response.status === 200) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    return new Response(JSON.stringify({ error: 'offline' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  const response = await fetch(request);
+  if (response && response.status === 200) {
+    const cache = await caches.open(cacheName);
+    cache.put(request, response.clone());
   }
+  return response;
 }
 
 /**
@@ -179,6 +174,29 @@ self.addEventListener('fetch', (event) => {
 
   // ── Everything else (app shell, JS chunks, CSS): network-first ────────────
   event.respondWith(networkFirst(request, DYNAMIC_CACHE));
+});
+
+// ─── Message handler — cache URL from main thread ────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'CACHE_BIBLE_CHAPTER') {
+    const { url } = event.data;
+    if (!url) return;
+    event.waitUntil(
+      (async () => {
+        const cache = await caches.open(BIBLE_CACHE);
+        // Don't re-fetch if already cached
+        if (await caches.match(url)) return;
+        try {
+          const response = await fetch(url);
+          if (response && response.status === 200) {
+            cache.put(url, response.clone());
+          }
+        } catch {
+          // App will try localStorage fallback
+        }
+      })()
+    );
+  }
 });
 
 // ─── Push Notifications ───────────────────────────────────────────────────────

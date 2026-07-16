@@ -30,17 +30,11 @@ async function setupNotifications() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    for (const reg of regs) {
-      if (reg.active && reg.active.scriptURL.includes('sw.js')) {
-        reg.unregister();
-      }
-    }
-  });
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js?v=3')
+    navigator.serviceWorker.register('/sw.js')
       .then(reg => {
         console.log('[SW] Registered, scope:', reg.scope);
+        window.__sw_reg = reg;
         setupNotifications();
       })
       .catch(err => console.warn('[SW] Registration failed:', err));
