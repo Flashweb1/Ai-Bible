@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { askAIStream } from '../js/api.js';
+import Markdown from './Markdown.jsx';
 import { SUGGESTIONS } from '../js/data.js';
 import { useToast } from './Toast.jsx';
 import { usePageTitle } from '../hooks/usePageTitle.js';
+import { useAppContext } from '../AppContext.jsx';
 
 export default function Scholar({ selectedBook, currentChapter, user, onLoginClick }) {
   usePageTitle('Scholar');
   const showToast = useToast();
 
-  const [messages, setMessages] = useState([]);
+  const { scholarChat: messages, setScholarChat: setMessages, clearScholarChat } = useAppContext();
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
@@ -65,9 +68,10 @@ export default function Scholar({ selectedBook, currentChapter, user, onLoginCli
       : '';
 
     const systemPrompt = `You are "The Scholar", a warm, professional, and wise Bible expert.${context}
-Answer in clear, structured paragraphs.
+Answer in clear, structured paragraphs separated by blank lines.
 Use **bold** for key terms and Bible references.
 Use > for direct Bible quotes.
+Use "- " for bullet lists when listing points.
 Keep answers focused and conversational—3-4 paragraphs unless asked for depth.
 End with a short question to continue the discussion.`;
 
@@ -138,6 +142,13 @@ End with a short question to continue the discussion.`;
     handleSend(prompts[type]);
   };
 
+  const handleClearChat = () => {
+    if (!messages.length) return;
+    if (window.confirm('Clear this conversation? This cannot be undone.')) {
+      clearScholarChat();
+    }
+  };
+
   const passageLabel = selectedBook ? `${selectedBook.n} ${currentChapter}` : null;
 
   return (
@@ -145,7 +156,21 @@ End with a short question to continue the discussion.`;
       <div className="ai-header">
         <span className="ai-header-title">✨ The Scholar</span>
         {passageLabel && <span className="ai-header-passage">{passageLabel}</span>}
+        <span className="ai-header-spacer" />
+        {user && messages.length > 0 && (
+          <span className="ai-synced" title="Chats are saved to your account">☁️ Synced</span>
+        )}
+        {messages.length > 0 && (
+          <button className="ai-clear" onClick={handleClearChat} title="Clear conversation" aria-label="Clear conversation">Clear</button>
+        )}
       </div>
+
+      {!user && (
+        <div className="chat-sync-banner" role="status">
+          <span>💾 Your chats are saved on this device. Sign in to sync them across devices.</span>
+          <button className="chat-sync-btn" onClick={onLoginClick}>Sign in</button>
+        </div>
+      )}
 
       <div className="chatsc" aria-live="polite" aria-relevant="additions">
         {messages.length === 0 && (
@@ -164,7 +189,12 @@ End with a short question to continue the discussion.`;
         {messages.map((m, i) => (
           <div key={i} className={`bub ${m.role === 'user' ? 'bu' : 'bai'}`}>
             {m.role === 'assistant' && <div className="blbl">✦ The Scholar</div>}
-            <div className="msg-content" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{m.content || (loading && i === messages.length - 1 ? '' : '')}</div>
+            <div
+              className="msg-content"
+              style={m.role === 'user' ? { whiteSpace: 'pre-wrap', lineHeight: 1.6 } : undefined}
+            >
+              {m.role === 'assistant' ? <Markdown content={m.content} /> : m.content}
+            </div>
           </div>
         ))}
 

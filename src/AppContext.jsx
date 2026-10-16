@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { auth, db } from './lib/firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -22,9 +22,11 @@ export function AppProvider({ children }) {
   const [prayers, setPrayers] = useState(() => loadSavedJSON('sc-prayers', []));
   const [devotionals, setDevotionals] = useState(() => loadSavedJSON('sc-devotions', []));
   const [readingPlans, setReadingPlans] = useState(() => loadSavedJSON('sc-plans', []));
-  
+  const [scholarChat, setScholarChat] = useState(() => loadSavedJSON('sc-scholar-chat', []));
+
   const [user, setUser] = useState(null);
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
+  const cloudSaveTimer = useRef(null);
 
   // Listen for Firebase Auth changes to load cloud data safely
   useEffect(() => {
@@ -63,6 +65,11 @@ export function AppProvider({ children }) {
               data.readingPlans.forEach(cp => { if (!merged.find(lp => lp.id === cp.id)) merged.push(cp); });
               return merged.sort((a, b) => new Date(b.startedAt || 0) - new Date(a.startedAt || 0));
             });
+            // A single ongoing conversation — cloud history wins when present,
+            // otherwise the on-device history is kept and uploaded on next save.
+            if (Array.isArray(data.scholarChat) && data.scholarChat.length) {
+              setScholarChat(data.scholarChat);
+            }
           }
         } catch (err) {
           console.error("Failed to sync from Firebase:", err);
@@ -76,7 +83,7 @@ export function AppProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // Auto-sync state changes back to LocalStorage AND Firebase
+  // Persist to LocalStorage immediately (works offline and for anonymous users)
   useEffect(() => {
     try { localStorage.setItem('sc-hl', JSON.stringify(highlights)); } catch {}
     try { localStorage.setItem('sc-bm', JSON.stringify(bookmarks)); } catch {}
@@ -84,13 +91,24 @@ export function AppProvider({ children }) {
     try { localStorage.setItem('sc-prayers', JSON.stringify(prayers)); } catch {}
     try { localStorage.setItem('sc-devotions', JSON.stringify(devotionals)); } catch {}
     try { localStorage.setItem('sc-plans', JSON.stringify(readingPlans)); } catch {}
+    try { localStorage.setItem('sc-scholar-chat', JSON.stringify(scholarChat)); } catch {}
+  }, [highlights, bookmarks, notes, prayers, devotionals, readingPlans, scholarChat]);
 
-    if (user && isCloudLoaded) {
+  // Backup to Firebase (debounced — avoids a write on every streamed chat token)
+  useEffect(() => {
+    if (!user || !isCloudLoaded) return;
+    if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
+    cloudSaveTimer.current = setTimeout(() => {
       const docRef = doc(db, 'users', user.uid, 'data', 'appState');
-      setDoc(docRef, { highlights, bookmarks, notes, prayers, devotionals, readingPlans }, { merge: true })
+      setDoc(docRef, { highlights, bookmarks, notes, prayers, devotionals, readingPlans, scholarChat }, { merge: true })
         .catch(err => console.error("Failed to backup to Firebase:", err));
-    }
-  }, [highlights, bookmarks, notes, prayers, devotionals, readingPlans, user, isCloudLoaded]);
+    }, 1500);
+    return () => {
+      if (cloudSaveTimer.current) clearTimeout(cloudSaveTimer.current);
+    };
+  }, [highlights, bookmarks, notes, prayers, devotionals, readingPlans, scholarChat, user, isCloudLoaded]);
+
+  const clearScholarChat = () => setScholarChat([]);
 
   const toggleHighlight = (key, color) => {
     setHighlights(prev => {
@@ -205,6 +223,7 @@ export function AppProvider({ children }) {
       prayers, setPrayers, 
       devotionals, addDevotional, updateDevotionalDay, deleteDevotional,
       readingPlans, startPlan, markDayComplete, deletePlan,
+      scholarChat, setScholarChat, clearScholarChat,
       streak 
     }}>
       {children}

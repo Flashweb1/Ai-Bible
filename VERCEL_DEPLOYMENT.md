@@ -38,11 +38,18 @@ This guide explains how to deploy Scripturai to Vercel with both frontend and ba
 4. **Add Environment Variables** (in Vercel project settings):
    ```
    VITE_API_URL = https://your-deployment.vercel.app/api
+   VITE_FIREBASE_API_KEY = (from .env)
+   VITE_FIREBASE_AUTH_DOMAIN = ai-bible-2faa5.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID = ai-bible-2faa5
+   VITE_FIREBASE_STORAGE_BUCKET = ai-bible-2faa5.firebasestorage.app
+   VITE_FIREBASE_MESSAGING_SENDER_ID = 683396759678
+   VITE_FIREBASE_APP_ID = 1:683396759678:web:1b573dbbd183d17282982f
    GEMINI_API_KEY = (your Gemini API key)
    OPENROUTER_API_KEY = (your OpenRouter API key)
    ALLOWED_ORIGINS = https://your-deployment.vercel.app
    SITE_URL = https://your-deployment.vercel.app
    ```
+   > **Note:** the `VITE_FIREBASE_*` variables are **required** — the app throws on startup if they are missing (`src/lib/firebase.js`).
 
 5. Deploy and Vercel will automatically:
    - Install dependencies (`npm install`)
@@ -104,6 +111,20 @@ In **Netlify dashboard → Site Settings → Environment Variables**:
 **Important:** On Netlify, the build will auto-detect `netlify.toml` and deploy the function at `netlify/functions/api.mjs`. No extra setup needed.
 
 > **⚠️ Tip:** Copy API keys from your local `backend/.env`. **Never commit them to a public repository.**
+
+### Step 3b: Authorize your domain (required for Google sign-in)
+
+Firebase only allows OAuth/popup sign-in from **authorized domains**. If the domain is missing, Google sign-in fails with `auth/unauthorized-domain`.
+
+1. Open the [Firebase Console](https://console.firebase.google.com/) → project **ai-bible-2faa5**
+2. Go to **Authentication → Settings → Authorized domains**
+3. Add every domain you use, e.g.:
+   - `localhost` (already present — use `http://localhost:5173`, not `127.0.0.1`)
+   - `your-app.vercel.app` and/or `your-site.netlify.app`
+   - any custom domain (e.g. `scripturai.com`)
+4. Save.
+
+**Current project authorized domains:** `localhost`, `ai-bible-2faa5.firebaseapp.com`, `ai-bible-2faa5.web.app`.
 
 ## Step 4: Test the Deployment
 
