@@ -39,9 +39,9 @@ if (openrouterKey) {
       'X-Title': 'Scripturai',
     },
     models: [
-      'deepseek/deepseek-chat',
-      'deepseek/deepseek-v4-flash:free',
-      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
     ],
   });
 }
@@ -110,11 +110,22 @@ const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 const aiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 20,
   message: { error: "Please wait a moment before asking another question." },
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// A request should be retried on the same model when the failure is transient:
+// rate limits (429), provider outages/overloads (5xx), or network hiccups.
+function isRetryableError(err) {
+  const status = Number(err?.status || err?.response?.status);
+  if (status === 429 || (status >= 500 && status < 600)) return true;
+  const msg = String(err?.message || '');
+  return /429|5\d\d|timeout|timed out|ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|no body|overloaded|temporarily|unavailable/i.test(msg);
+}
+
+const retryDelay = (attempt) => new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
 
 async function tryModel(client, model, messages, systemPrompt) {
   const completion = await client.chat.completions.create({
@@ -135,9 +146,9 @@ async function getAIResponse(messages, systemPrompt) {
         try {
           return await tryModel(provider.client, model, messages, systemPrompt);
         } catch (err) {
-          const isRateLimit = err.status === 429 || (err.message || '').includes('429');
-          if (isRateLimit && attempt < 2) {
-            await new Promise(r => setTimeout(r, 2000));
+          if (isRetryableError(err) && attempt < 2) {
+            console.warn(`${provider.name} model ${model} transient error (attempt ${attempt + 1}/3):`, err.message);
+            await retryDelay(attempt);
             continue;
           }
           console.warn(`${provider.name} model ${model} failed:`, err.message);
@@ -169,16 +180,24 @@ async function getAIResponseStream(messages, systemPrompt, writeToken) {
   for (const provider of providerClients) {
     for (const model of provider.models) {
       for (let attempt = 0; attempt < 3; attempt++) {
+        let wroteAny = false;
         try {
           for await (const token of tryModelStream(provider.client, model, messages, systemPrompt)) {
+            wroteAny = true;
             writeToken(token);
           }
           return;
         } catch (err) {
-          const isRateLimit = err.status === 429 || (err.message || '').includes('429');
-          if (isRateLimit && attempt < 2) {
-            await new Promise(r => setTimeout(r, 2000));
+          // Only safe to retry another provider/model if nothing was streamed yet,
+          // otherwise a retry would duplicate already-sent tokens.
+          if (isRetryableError(err) && attempt < 2 && !wroteAny) {
+            console.warn(`${provider.name} model ${model} stream transient error (attempt ${attempt + 1}/3):`, err.message);
+            await retryDelay(attempt);
             continue;
+          }
+          if (wroteAny) {
+            console.warn(`${provider.name} model ${model} stream broke after partial output:`, err.message);
+            return;
           }
           console.warn(`${provider.name} model ${model} stream failed:`, err.message);
           break;
